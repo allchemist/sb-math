@@ -320,7 +320,7 @@ void zmmult (double complex array1[], double complex array2[], int size)
 
 // missing stats operations
 
-int ismin (float array[], int size)
+int simin (float array[], int size)
 {
   int pos;
   float val=array[0];
@@ -336,7 +336,7 @@ int ismin (float array[], int size)
   return min_pos;
 }
 
-int idmin (double array[], int size)
+int dimin (double array[], int size)
 {
   int pos;
   double val=array[0];
@@ -352,7 +352,7 @@ int idmin (double array[], int size)
   return min_pos;
 }
 
-int ismax (float array[], int size)
+int simax (float array[], int size)
 {
   int pos;
   float val=array[0];
@@ -368,7 +368,7 @@ int ismax (float array[], int size)
   return max_pos;
 }
 
-int idmax (double array[], int size)
+int dimax (double array[], int size)
 {
   int pos;
   double val=array[0];
@@ -384,7 +384,7 @@ int idmax (double array[], int size)
   return max_pos;
 }
 
-int isamin (float array[], int size)
+int siamin (float array[], int size)
 {
   int pos;
   float val=fabs(array[0]);
@@ -400,7 +400,7 @@ int isamin (float array[], int size)
   return min_pos;
 }
 
-int idamin (double array[], int size)
+int diamin (double array[], int size)
 {
   int pos;
   double val=fabs(array[0]);
@@ -416,7 +416,7 @@ int idamin (double array[], int size)
   return min_pos;
 }
 
-int icamin (float complex array[], int size)
+int ciamin (float complex array[], int size)
 {
   int pos;
   float val=fabs(array[0]);
@@ -432,7 +432,7 @@ int icamin (float complex array[], int size)
   return min_pos;
 }
 
-int izamin (double complex array[], int size)
+int ziamin (double complex array[], int size)
 {
   int pos;
   double val=fabs(array[0]);
@@ -448,7 +448,7 @@ int izamin (double complex array[], int size)
   return min_pos;
 }
 
-float mssum (float array[], int size)
+float smsum (float array[], int size)
 {
   int pos;
   float sum=0;
@@ -458,7 +458,7 @@ float mssum (float array[], int size)
   return sum;
 }
 
-double mdsum (double array[], int size)
+double dmsum (double array[], int size)
 {
   int pos;
   double sum=0;

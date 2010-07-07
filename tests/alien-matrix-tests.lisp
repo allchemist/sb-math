@@ -78,4 +78,40 @@
     :eps *eps-double*)
 
 ;; permute-rows
+  (define-test "permute-rows-single"
+      (let ((perm (random-permutation (dim0 sm)))
+	    (copy (copy sm)))
+	(do-matrix (perm i)
+	  (setf (row copy i) (row sm (aref perm i))))
+	copy)
+    (permute-rows sm (random-permutation (dim0 sm)))
+    :eps *eps-single*)
+
+  (define-test "permute-rows-double"
+      (let ((perm (random-permutation (dim0 dm)))
+	    (copy (copy dm)))
+	(do-matrix (perm i)
+	  (setf (row copy i) (row dm (aref perm i))))
+	copy)
+    (permute-rows dm (random-permutation (dim0 dm)))
+    :eps *eps-double*)
+  
+  (define-test "permute-rows-complex-single"
+      (let ((perm (random-permutation (dim0 cm)))
+	    (copy (copy cm)))
+	(do-matrix (perm i)
+	  (setf (row copy i) (row cm (aref perm i))))
+	copy)
+    (permute-rows cm (random-permutation (dim0 cm)))
+    :eps *eps-single*)
+
+  (define-test "permute-rows-complex-double"
+      (let ((perm (random-permutation (dim0 zm)))
+	    (copy (copy zm)))
+	(do-matrix (perm i)
+	  (setf (row copy (aref perm i)) (row zm i)))
+	copy)
+    (permute-rows zm (random-permutation (dim0 zm)))
+    :eps *eps-double*)
+
 )

@@ -76,6 +76,15 @@
 	       (array-sap matrix) (array-sap perm) (array-sap dest) dim0 dim1))
     dest))
 
+(defun random-permutation (size)
+  (let ((perm (make-array size :element-type '(unsigned-byte 32))))
+    (do-matrix (perm i)
+      (setf (aref perm i) i))
+    (dotimes (i (1+ (random size)))
+      (rotatef (aref perm (random size))
+	       (aref perm (random size))))
+    perm))
+
 (defun submatrix (matrix dimensions offset &optional dest)
   (let ((element-type (array-element-type matrix))
 	(dim0 (dim0 matrix))
@@ -119,10 +128,11 @@
     matrix))
 
 (defun m+c (matrix const)
-  (sb-sys:with-pinned-objects (matrix const)
-    (funcall (with-function-choice 'mplusc (array-element-type matrix))
-	     (array-sap matrix) (maybe-complex const) (array-total-size matrix)))
-  matrix)
+  (let ((type (array-element-type matrix)))
+    (sb-sys:with-pinned-objects (matrix const)
+      (funcall (with-function-choice 'mplusc type)
+	       (array-sap matrix) (maybe-complex (coerce const type)) (array-total-size matrix)))
+    matrix))
 
 (defun m-c (matrix const)
   (declare (inline m+c))

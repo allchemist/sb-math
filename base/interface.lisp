@@ -54,8 +54,12 @@
   (sb-sys:int-sap (logand (sb-vm::get-lisp-obj-address object)
                           (lognot sb-vm::lowtag-mask))))
 
+;; may be a fix is needed for x86_64,
+;; if the header size differs there
 (defun complex-sap (complex)
-  (sb-sys:sap+ (object-sap complex) 4))
+  (sb-sys:sap+ (object-sap complex)
+	       (if (sb-kernel:complex-single-float-p complex)
+		   4 8)))
 
 (defun maybe-complex (number)
   (if (complexp number)
