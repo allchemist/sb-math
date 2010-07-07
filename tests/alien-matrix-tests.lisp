@@ -2,16 +2,28 @@
 
 (let ((sm (make-random-matrix (list (round (plain-rng 5 10))
 				    (round (plain-rng 5 10)))
-			      :element-type 'single-float))
+			      :element-type 'single-float
+			      :rng #'(lambda (x)
+				       (declare (ignore x))
+				       (plain-rng -1 1 :element-type 'single-float))))
       (dm (make-random-matrix (list (round (plain-rng 5 10))
 				    (round (plain-rng 5 10)))
-			      :element-type 'double-float))
+			      :element-type 'double-float
+			      :rng #'(lambda (x)
+				       (declare (ignore x))
+				       (plain-rng -1 1 :element-type 'double-float))))
       (cm (make-random-matrix (list (round (plain-rng 5 10))
 				    (round (plain-rng 5 10)))
-			      :element-type '(complex single-float)))
+			      :element-type '(complex single-float)
+			      :rng #'(lambda (x)
+				       (declare (ignore x))
+				       (plain-rng -1 1 :element-type '(complex single-float)))))
       (zm (make-random-matrix (list (round (plain-rng 5 10))
 				    (round (plain-rng 5 10)))
-			      :element-type '(complex double-float))))
+			      :element-type '(complex double-float)
+			      :rng #'(lambda (x)
+				       (declare (ignore x))
+				       (plain-rng -1 1 :element-type '(complex double-float))))))
 
 ;; transpose, row, col
   (define-test "transpose,row,col-single"
@@ -78,40 +90,150 @@
     :eps *eps-double*)
 
 ;; permute-rows
-  (define-test "permute-rows-single"
-      (let ((perm (random-permutation (dim0 sm)))
-	    (copy (copy sm)))
-	(do-matrix (perm i)
-	  (setf (row copy i) (row sm (aref perm i))))
-	copy)
-    (permute-rows sm (random-permutation (dim0 sm)))
+
+  (let ((perm (random-permutation (dim0 sm))))  
+    (define-test "permute-rows-single"
+	(let ((copy (copy sm)))
+	  (do-matrix (perm i)
+	    (setf (row copy (aref perm i)) (row sm i)))
+	  copy)
+      (permute-rows sm perm)
+      :eps *eps-single*))
+
+  (let ((perm (random-permutation (dim0 dm))))
+    (define-test "permute-rows-double"
+	(let ((copy (copy dm)))
+	  (do-matrix (perm i)
+	    (setf (row copy (aref perm i)) (row dm i)))
+	  copy)
+      (permute-rows dm perm)
+      :eps *eps-double*))
+
+  (let ((perm (random-permutation (dim0 cm))))  
+    (define-test "permute-rows-complex-single"
+	(let ((copy (copy cm)))
+	  (do-matrix (perm i)
+	    (setf (row copy (aref perm i)) (row cm i)))
+	  copy)
+      (permute-rows cm perm)
+      :eps *eps-single*))
+
+  (let ((perm (random-permutation (dim0 zm))))
+    (define-test "permute-rows-complex-double"
+	(let ((copy (copy zm)))
+	  (do-matrix (perm i)
+	    (setf (row copy (aref perm i)) (row zm i)))
+	  copy)
+      (permute-rows zm perm)
+      :eps *eps-double*))
+
+;; submatrix
+  (let ((sub (make-matrix '(3 2) :element-type 'single-float)))
+    (define-test "submatrix+set-single"
+	(let ((copy (copy sm)))
+	  (setf (submatrix copy '(1 2)) sub)
+	  (submatrix copy '(3 2) '(1 2)))
+      sub
+      :eps *eps-single*))
+
+  (let ((sub (make-matrix '(3 2) :element-type 'double-float)))
+    (define-test "submatrix+set-double"
+	(let ((copy (copy dm)))
+	  (setf (submatrix copy '(1 2)) sub)
+	  (submatrix copy '(3 2) '(1 2)))
+      sub
+      :eps *eps-double*))
+
+  (let ((sub (make-matrix '(3 2) :element-type '(complex single-float))))
+    (define-test "submatrix+set-complex-single"
+	(let ((copy (copy cm)))
+	  (setf (submatrix copy '(1 2)) sub)
+	  (submatrix copy '(3 2) '(1 2)))
+      sub
+      :eps *eps-single*))
+
+  (let ((sub (make-matrix '(3 2) :element-type '(complex double-float))))
+    (define-test "submatrix+set-complex-double"
+	(let ((copy (copy zm)))
+	  (setf (submatrix copy '(1 2)) sub)
+	  (submatrix copy '(3 2) '(1 2)))
+      sub
+      :eps *eps-double*))
+
+;; m+/-c
+  (define-test "m+/-c-single"
+      (m-c (m+c (copy sm) 1) 1)
+    sm
+    :eps *eps-single*)
+  
+  (define-test "m+/-c-double"
+      (m-c (m+c (copy dm) 1) 1)
+    dm
+    :eps *eps-double*)
+#|  
+  (define-test "m+/-c-complex-single"
+      (m-c (m+c (copy cm) 1) 1)
+    sm
+    :eps *eps-single*)
+  
+  (define-test "m+/-c-complex-double"
+      (m-c (m+c (copy zm) 1) 1)
+    sm
+    :eps *eps-double*)
+|#
+;; m*c
+
+  (define-test "m*-single"
+      (row (m* (copy sm) sm) 2)
+    (map '(vector single-float) #'square (row sm 2))
     :eps *eps-single*)
 
-  (define-test "permute-rows-double"
-      (let ((perm (random-permutation (dim0 dm)))
-	    (copy (copy dm)))
-	(do-matrix (perm i)
-	  (setf (row copy i) (row dm (aref perm i))))
-	copy)
-    (permute-rows dm (random-permutation (dim0 dm)))
+  (define-test "m*-double"
+      (row (m* (copy dm) dm) 2)
+    (map '(vector double-float) #'square (row dm 2))
+    :eps *eps-double*)
+
+  (define-test "m*-complex-single"
+      (row (m* (copy cm) cm) 2)
+    (map '(vector (complex single-float)) #'square (row cm 2))
+    :eps *eps-single*)
+
+  (define-test "m*-complex-double"
+      (row (m* (copy zm) zm) 2)
+    (map '(vector (complex double-float)) #'square (row zm 2))
     :eps *eps-double*)
   
-  (define-test "permute-rows-complex-single"
-      (let ((perm (random-permutation (dim0 cm)))
-	    (copy (copy cm)))
-	(do-matrix (perm i)
-	  (setf (row copy i) (row cm (aref perm i))))
-	copy)
-    (permute-rows cm (random-permutation (dim0 cm)))
+;; min
+  (define-test "mmin-single"
+      (mmin sm)
+    (apply #'min (coerce (sb-ext:array-storage-vector sm) 'list))
     :eps *eps-single*)
 
-  (define-test "permute-rows-complex-double"
-      (let ((perm (random-permutation (dim0 zm)))
-	    (copy (copy zm)))
-	(do-matrix (perm i)
-	  (setf (row copy (aref perm i)) (row zm i)))
-	copy)
-    (permute-rows zm (random-permutation (dim0 zm)))
+  (define-test "mmin-double"
+      (mmin dm)
+    (apply #'min (coerce (sb-ext:array-storage-vector dm) 'list))
     :eps *eps-double*)
+
+;; min abs
+  (define-test "ammin-single"
+      (abs (ammin sm))
+    (apply #'min (map 'list #'abs (sb-ext:array-storage-vector sm)))
+    :eps *eps-single*)
+
+  (define-test "ammin-double"
+      (abs (ammin dm))
+    (apply #'min (map 'list #'abs (sb-ext:array-storage-vector dm)))
+    :eps *eps-double*)
+#|
+  (define-test "ammin-complex-single"
+      (abs (ammin cm))
+    (apply #'min (map 'list #'abs (sb-ext:array-storage-vector cm)))
+    :eps *eps-single*)
+
+  (define-test "ammin-complex-double"
+      (abs (ammin zm))
+    (apply #'min (map 'list #'abs (sb-ext:array-storage-vector zm)))
+    :eps *eps-double*)
+|#
 
 )

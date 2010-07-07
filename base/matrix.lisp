@@ -54,11 +54,10 @@
 	    (funcall func (aref v1 i) (aref v2 i))))
     m1))
 
-(defun make-random-matrix (dimensions &rest keys &key
+(defun make-random-matrix (dimensions &key
 			   (element-type *default-type*)
-			   (rng #'simple-rng)
-			   &allow-other-keys)
-  (map-matrix (apply #'make-matrix dimensions :element-type element-type keys) rng))
+			   (rng #'simple-rng))
+  (map-matrix (make-matrix dimensions :element-type element-type) rng))
 
 ;; printing matrices
 
