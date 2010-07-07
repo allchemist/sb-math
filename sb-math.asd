@@ -13,6 +13,7 @@
 	    :components
 	    ((:file "package")
 	     (:file "scalar" :depends-on ("package"))
+	     (:file "quaternions" :depends-on ("package" "scalar"))
 	     (:file "reader-macro" :depends-on ("package"))
 	     (:file "interface" :depends-on ("package"))
 	     (:file "matrix" :depends-on ("package" "scalar"))))

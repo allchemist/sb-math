@@ -1,4 +1,4 @@
-(in-package :trivial-algebra)
+(in-package :sb-math)
 
 ;;; quaternion q=w+ix+jy+kz is represented as 4-vector: [w x y z]
 ;;; every operation is destructive (if it can be destructive), except q-prod

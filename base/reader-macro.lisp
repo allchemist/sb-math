@@ -27,8 +27,8 @@
   (declare (ignore ignore)) 
   (let ((args (read stream t nil t)))
     (let ((type (or (case arg
-		      (0  'fixnum)
-		      (1  '(unsigned-byte 32))
+		      (2  'fixnum)
+		      (3  '(unsigned-byte 32))
 		      (00 'single-float)
 		      (01 'double-float)
 		      (10 '(complex single-float))
