@@ -25,4 +25,20 @@
 	  (funcall (with-function-choice 'getri element-type t) LU P work))
 	LU))))
 
-
+(defun lu-solve (A B &key (trans :notrans))
+  (let* ((dim (dim0 A))
+	 (X (if (vectorp B) (copy B) (transpose B)))
+	 (real-A A)
+	 (element-type (array-element-type A))
+	 (real-trans (ecase trans
+		       (:notrans :trans)
+		       (:trans :notrans)
+		       (:conjtrans (progn (setf real-A (transpose A))
+					  :conjtrans)))))
+    (assert (= dim (dim1 A) (dim1 X)) nil "MAtrix should be square")
+    (multiple-value-bind (LU P)
+	(lu real-A)
+      (sb-sys:with-pinned-objects (LU X P)
+	(funcall (with-function-choice 'getrs element-type t)
+		 (lapack-char-code real-trans) LU X P))
+      (if (vectorp B) (copy X) (transpose X)))))
