@@ -186,30 +186,53 @@
 ;;; BLAS 3
 
 (defun gemm (A B &key dest (alpha 1) (beta 0) (transA :notrans) (transB :notrans))
-  (let ((dimA0 nil) (dimA1 nil) (dimB0 nil) (dimB1 nil))
-    (if (eq transA :notrans)
-	(setf dimA0 (dim0 A)
-	      dimA1 (dim1 A))
-	(setf dimA0 (dim1 A)
-	      dimA1 (dim0 A)))
-    (if (eq transB :notrans)
-	(setf dimB0 (dim0 B)
-	      dimB1 (dim1 B))
-	(setf dimB0 (dim1 B)
-	      dimB1 (dim0 B)))
-    (assert (= dimA1 dimB0) nil "Improper dimensions for gemm")
+  (let (M N K K1 LDA LDB LDC)
+    (cond ((and (eq transA :notrans) (eq transB :notrans))
+	   (setf M (dim0 A)
+		 N (dim1 B)
+		 K (dim1 A)
+		 K1 (dim0 B)
+		 LDA K
+		 LDB N
+		 LDC N))
+	  ((and (not (eq transA :notrans)) (eq transB :notrans))
+	   (setf M (dim1 A)
+		 N (dim1 B)
+		 K (dim0 A)
+		 K1 (dim0 B)
+		 LDA M
+		 LDB N
+		 LDC N))
+	  ((and (eq transA :notrans) (not (eq transB :notrans)))
+	   (setf M (dim0 A)
+		 N (dim0 B)
+		 K (dim1 A)
+		 K1 (dim1 B)
+		 LDA K
+		 LDB K
+		 LDC N))
+	  ((and (not (eq transA :notrans)) (not (eq transB :notrans)))
+	   (setf M (dim1 A)
+		 N (dim0 B)
+		 K (dim0 A)
+		 K1 (dim1 B)
+		 LDA M
+		 LDB K
+		 LDC N)))
+    (assert (= K K1) nil "Improper dimensions for gemm")
     (let ((type (array-element-type A)))
       (if dest
-	  (assert (and (= dimA0 (dim0 dest))
-		       (= dimB1 (dim1 dest)))
+	  (assert (and (= M (dim0 dest))
+		       (= N (dim1 dest)))
 		  nil "Improper dimensions for gemm")
-	  (setf dest (make-matrix (list dimA0 dimB1) :element-type type)))
+	  (setf dest (make-matrix (list M N) :element-type type)))
       (sb-sys:with-pinned-objects (A B dest alpha beta)
 	(funcall
 	 (with-function-choice 'gemm type)
 	 'CblasRowMajor transA transB
-	 dimA0 dimB1 dimA1 (maybe-complex (coerce alpha type)) (array-sap A) dimA1
-	 (array-sap B) dimB1 (maybe-complex (coerce beta type)) (array-sap dest) dimB1)
+	 M N K (maybe-complex (coerce alpha type)) (array-sap A) LDA
+	 (array-sap B) LDB (maybe-complex (coerce beta type))
+	 (array-sap dest) LDC)
 	dest))))
 
 ;;; ==============================================================
