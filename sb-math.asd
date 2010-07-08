@@ -35,6 +35,14 @@
 	     (:file "utils" :depends-on ("module"))
 	     (:file "aliens" :depends-on ("module" "utils"))
 	     (:file "highlevel" :depends-on ("module" "utils" "aliens"))))
+   (:module lapack
+	    :depends-on (base lib blas alien-matrix)
+	    :components
+	    ((:file "module")
+	     (:file "utils" :depends-on ("module"))
+	     (:file "aliens" :depends-on ("module" "utils"))
+	     (:file "lowlevel" :depends-on ("module" "utils" "aliens"))
+	     (:file "highlevel" :depends-on ("module" "utils" "aliens" "lowlevel"))))
    (:module applications
 	    :depends-on (base lib blas alien-matrix)
 	    :components

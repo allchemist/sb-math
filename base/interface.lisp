@@ -41,11 +41,13 @@
 (defun concat-as-strings (args)
   (apply #'concatenate 'string (mapcar #'string args)))
 
-(defun with-function-choice (function type)
+(defun with-function-choice (function type &optional no-percent)
   (intern
    (string-upcase
     (concat-as-strings
-     (list '% (float-type-choice-prefix type) function)))
+     (if no-percent
+	 (list (float-type-choice-prefix type) function)
+	 (list '% (float-type-choice-prefix type) function))))
    :sb-math))
 
 ;; system area pointer of a complex number
