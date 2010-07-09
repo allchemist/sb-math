@@ -113,8 +113,8 @@
 	   (sb-sys:with-pinned-objects (A w wr wi vl vr work rwork)    
 	     (apply (with-function-choice 'geev type t)
 		    `(,(lapack-char-code left) ,(lapack-char-code right) ,copy-A
-		       ,@(if complex? (list w) (list wr wi))
-		       ,vl ,vr ,work ,@(when complex? `(,rwork) nil))))))
+		       ,@(if complex? `(,w) `(,wr ,wi))
+		       ,vl ,vr ,work ,@(if complex? `(,rwork) '()))))))
       (cond ((zerop info)
 	     (values 
 	       (let ((vec
@@ -138,4 +138,4 @@
 	    ((minusp info)
 	     (error "Illegal ~A'th parameter for geev" (- info)))
 	    ((plusp info)
-	     (error "QR failed" info))))))
+	     (error "QR failed"))))))

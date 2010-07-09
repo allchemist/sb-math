@@ -12,8 +12,8 @@
 
 (defparameter *passed* nil)
 (defparameter *asserted* nil)
-(defparameter *eps-single* 1.e-6)
-(defparameter *eps-double* 1.e-14)
+(defparameter *eps-single* 1.e-5)
+(defparameter *eps-double* 1.e-13)
 
 (defun define-test (name test compare &key (predicate #'~=) eps)
   (let ((exit (funcall predicate test compare eps)))
@@ -24,8 +24,15 @@
 	(progn
 	  (push name *asserted*)
 	  (format *query-io* "; Test ~A asserted~%" name)
-	  (format *query-io* "; Difference between ~%~A~%and~%~A~% is more than epsilon: ~A~%"
-		  test compare eps)))))
+	  (format *query-io* "; Difference between~%")
+	  (print-matrix test
+			:prec (with-float-type-choice (array-element-type test) 7 16 7 16)
+			:dest *query-io*)
+	  (format *query-io* "~%and~%")
+	  (print-matrix compare
+			:prec (with-float-type-choice (array-element-type compare) 7 16 7 16)
+			:dest *query-io*)
+	  (format *query-io* "~% is more than epsilon: ~A~%" eps)))))	  
 
 (defun run-tests (&rest tests)
   (flet ((test-file (test)
