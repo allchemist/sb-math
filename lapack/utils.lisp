@@ -34,11 +34,9 @@
 		(t 't)))))
 
 (defun lapack-parse-wrapper-arg (arg)
-  (cond ((eq (second arg) 'array)
-	 `(array-sap ,(first arg)))
-	((eq (second arg) 'array-integer)
-	 `(array-sap ,(first arg)))
-	(t `(alien-sap (addr ,(first arg))))))
+  (if (eq (second arg) 'array)
+      `(array-sap ,(first arg))
+      `(alien-sap (addr ,(first arg)))))
 
 (defmacro define-lapack-routine (name result args)
   (let ((defs nil))
@@ -48,10 +46,14 @@
 	(push `(define-alien-routine (,(string-downcase alien-name) ,fullname) ,result
 		 ,@(let ((arglst nil))
 		     (dolist (arg args (nreverse arglst))
-		       (if (not (eq (first arg) 'complex-only))
-			   (push (lapack-parse-alien-arg arg type) arglst)
-			   (when (or (eq type 'c) (eq type 'z))
-			     (push (lapack-parse-alien-arg (second arg) type) arglst))))))
+		       (case (first arg)
+			 (complex-only
+			    (when (or (eq type 'c) (eq type 'z))
+			      (push (lapack-parse-alien-arg (second arg) type) arglst)))
+			 (real-only 
+			    (when (or (eq type 's) (eq type 'd))
+			      (push (lapack-parse-alien-arg (second arg) type) arglst)))
+			 (t (push (lapack-parse-alien-arg arg type) arglst))))))
 	      defs)))
     `(progn ,@(nreverse defs))))
 
@@ -64,29 +66,41 @@
 	(push `(defun ,fullname
 		   ,(remove nil
 		     (mapcar #'(lambda (arg)
-				 (if (not (and (listp arg)
-					       (eq (first arg) 'complex-only)))
+				 (if (not (listp arg))
 				     arg
-				     (when (or (eq type 'c) (eq type 'z))
-				       (second arg))))
+				     (ecase (first arg)
+				       (real-only
+					  (when (or (eq type 's) (eq type 'd))
+					    (second arg)))
+				       (complex-only
+					  (when (or (eq type 'c) (eq type 'z))
+					    (second arg))))))
 			     ext-args))
 		 (let* ,lets
-		   (with-alien ,(remove-if #'(lambda (x)
-					       (or (member (first x) array-args)
-						   (eq (second x) 'array-integer)
-						   (and
-						    (eq (first x) 'complex-only)
-						    (or (member (list 'complex-only
-								      (first (second x)))
-								array-args :test #'equal)
-							(eq (second (second x)) 'array-integer)))))
-					   aliens)
+		   (with-alien ,(remove-if
+				 #'(lambda (x)
+				     (or (member (first x) array-args)
+					 (and
+					  (eq (first x) 'complex-only)
+					  (member (list 'complex-only
+							(first (second x)))
+						  array-args :test #'equal))
+					 (and
+					  (eq (first x) 'real-only)
+					  (member (list 'real-only
+							(first (second x)))
+						  array-args :test #'equal))))
+				 aliens)
 		     (,alien-name ,@(let ((arglst nil))
 				      (dolist (a aliens (nreverse arglst))
-					(if (not (eq (first a) 'complex-only))
-					    (push (lapack-parse-wrapper-arg a) arglst)
-					    (when (or (eq type 'c) (eq type 'z))
-					      (push (lapack-parse-wrapper-arg (second a)) arglst))))))
+					(case (first a)
+					  (complex-only
+					     (when (or (eq type 'c) (eq type 'z))
+					       (push (lapack-parse-wrapper-arg (second a)) arglst)))
+					  (real-only 
+					     (when (or (eq type 's) (eq type 'd))
+					       (push (lapack-parse-wrapper-arg (second a)) arglst)))
+					  (t (push (lapack-parse-wrapper-arg a) arglst))))))
 		     ,return)))
 	      defs)))
     `(progn ,@(nreverse defs))))

@@ -87,8 +87,55 @@
 			    (let ((diag-vec (pmatrix-storage-vector diag)))
 			      (do-matrix (diag-vec i)
 				(setf (aref diag-vec i) (coerce (aref S i) element-type)))))))
-	       (values diag (transpose U) (transpose VT))))
+	       (values diag
+		       (if (eq left :none) nil (transpose U))
+		       (if (eq right :none) nil (transpose VT)))))
 	    ((minusp info)
-	     (error "Illegal ~A'th parameter for %gesvd" (- info)))
+	     (error "Illegal ~A'th parameter for %esvd" (- info)))
 	    ((plusp info)
 	     (error "~A superdiagonals did not converge" info))))))
+
+(defun eigen (A &key (right :eval) (left :none) (values :vector) (real-values nil))
+  (let* ((dim (dim0 A))
+	 (type (array-element-type A))
+	 (complex? (subtypep type 'complex))
+	 (real-type (if complex? (second type) type))
+	 (copy-A (transpose A))
+	 (w (when complex? (make-matrix dim :element-type type)))
+	 (wr (when (not complex?) (make-matrix dim :element-type real-type)))
+	 (wi (when (not complex?) (make-matrix dim :element-type real-type)))
+	 (vl (make-matrix (list (if (eq left :none) 1 dim) dim) :element-type type))
+	 (vr (make-matrix (list (if (eq right :none) 1 dim) dim) :element-type type))
+	 (work (make-matrix (* dim 4) :element-type type))
+	 (rwork (when complex? (make-matrix (* dim 2) :element-type real-type))))
+    (assert (= dim (dim1 A)) nil "Matrix should be square")
+    (let ((info
+	   (sb-sys:with-pinned-objects (A w wr wi vl vr work rwork)    
+	     (apply (with-function-choice 'geev type t)
+		    `(,(lapack-char-code left) ,(lapack-char-code right) ,copy-A
+		       ,@(if complex? (list w) (list wr wi))
+		       ,vl ,vr ,work ,(when complex? rwork))))))
+      (cond ((zerop info)
+	     (values 
+	       (let ((vec
+		      (if complex?
+			  w
+			  (if real-values
+			      wr
+			      (let ((vals (make-array dim :element-type `(complex ,real-type))))
+				(do-matrix (vals i)
+				  (setf (aref vals i) (complex (aref wr i) (aref wi i))))
+				vals)))))
+		 (ecase values
+		   (:vector vec)
+		   (:matrix (diag vec))
+		   (:packed (make-instance 'diagonal-matrix
+					   :storage-vector vec
+					   :ldm dim
+					   :ncols dim))))
+	       (if (eq right :none) nil (transpose vr))
+	       (if (eq left :none) nil (transpose vl))))
+	    ((minusp info)
+	     (error "Illegal ~A'th parameter for geev" (- info)))
+	    ((plusp info)
+	     (error "QR failed" info))))))

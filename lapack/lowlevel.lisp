@@ -50,3 +50,13 @@
 	   (ldu integer (dim1 u)) (vt array) (ldvt integer (dim1 vt)) (work array)
 	   (lwork integer (dim0 work)) (complex-only (rwork array)) (info integer 0)))
 
+(define-lapack-wrapper geev
+    :return info
+  :lets ((dim (dim0 A)))
+  :array-args (A (real-only wr) (real-only wi) (complex-only w) vl vr work (complex-only rwork))
+  :rest-args (jobvl jobvr)
+  :aliens ((jvl char jobvl) (jvr char jobvr) (N integer dim) (A array) (lda integer dim)
+	   (real-only (wr array)) (real-only (wi array)) (complex-only (w array))
+	   (vl array) (ldvl integer (dim0 vl)) (vr array) (ldvr integer (dim0 vr))
+	   (work array) (lwork integer (dim0 work)) (complex-only (rwork array))
+	   (info integer)))

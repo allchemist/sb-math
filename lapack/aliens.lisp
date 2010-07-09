@@ -15,3 +15,9 @@
   ((jobu char) (jobvt char) (m integer) (n integer) (a float) (lda integer)
    (s real-float) (vt float) (ldvt integer) (u float) (ldu integer) (work float)
    (lwork integer) (complex-only (rwork real-float)) (info integer)))
+
+(define-lapack-routine geev void
+  ((jobvl char) (jobvr char) (N integer) (A float) (lda integer)
+   (real-only (wr float)) (real-only (wl float)) (complex-only (w float))
+   (vl float) (ldvl integer) (vr float) (ldvr integer)
+   (work float) (lwork integer) (complex-only (rwork real-float)) (info integer)))
