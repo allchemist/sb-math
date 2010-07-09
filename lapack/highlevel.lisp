@@ -35,7 +35,7 @@
 		       (:trans :notrans)
 		       (:conjtrans (progn (setf real-A (transpose A))
 					  :conjtrans)))))
-    (assert (= dim (dim1 A) (dim1 X)) nil "MAtrix should be square")
+    (assert (= dim (dim1 A) (if (vectorp X) (dim0 X) (dim1 X))) nil "MAtrix should be square")
     (multiple-value-bind (LU P)
 	(lu real-A)
       (sb-sys:with-pinned-objects (LU X P)
@@ -114,7 +114,7 @@
 	     (apply (with-function-choice 'geev type t)
 		    `(,(lapack-char-code left) ,(lapack-char-code right) ,copy-A
 		       ,@(if complex? (list w) (list wr wi))
-		       ,vl ,vr ,work ,(when complex? rwork))))))
+		       ,vl ,vr ,work ,@(when complex? `(,rwork) nil))))))
       (cond ((zerop info)
 	     (values 
 	       (let ((vec
