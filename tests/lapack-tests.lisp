@@ -123,4 +123,68 @@
     zm
     :eps *eps-double*)
 
+;; svd
+
+  (define-test "svd-prod-single"
+      (multiple-value-bind (S U VT)
+	  (svd sm :left :all :right :all :values :matrix)
+	(gemm (gemm U S) VT))
+    sm
+    :eps *eps-single*)
+  
+  (define-test "svd-prod-double"
+      (multiple-value-bind (S U VT)
+	  (svd dm :left :all :right :all :values :matrix)
+	(gemm (gemm U S) VT))
+    dm
+    :eps *eps-double*)
+
+  (define-test "svd-prod-complex-single"
+      (multiple-value-bind (S U VT)
+	  (svd cm :left :all :right :all :values :matrix)
+	(gemm (gemm U S) VT))
+    cm
+    :eps *eps-single*)
+  
+  (define-test "svd-prod-complex-double"
+      (multiple-value-bind (S U VT)
+	  (svd zm :left :all :right :all :values :matrix)
+	(gemm (gemm U S) VT))
+    zm
+    :eps *eps-double*)
+
+  (multiple-value-bind (S U VT)
+      (svd sm :left :all :right :all :values :matrix)
+    (declare (ignore S))
+    (define-test "svd-orth-single"
+	(gemm U U :transa :trans)
+      (gemm VT VT :transa :trans)
+      :eps *eps-single*))
+
+  (multiple-value-bind (S U VT)
+      (svd dm :left :all :right :all :values :matrix)
+    (declare (ignore S))
+    (define-test "svd-orth-double"
+	(gemm U U :transa :trans)
+      (gemm VT VT :transa :trans)
+      :eps *eps-double*))
+
+  (multiple-value-bind (S U VT)
+      (svd cm :left :all :right :all :values :matrix)
+    (declare (ignore S))
+    (define-test "svd-orth-complex-single"
+	(gemm U U :transa :conjtrans)
+      (gemm VT VT :transa :conjtrans)
+      :eps *eps-single*))
+
+  (multiple-value-bind (S U VT)
+      (svd zm :left :all :right :all :values :matrix)
+    (declare (ignore S))
+    (define-test "svd-orth-complex-double"
+	(gemm U U :transa :conjtrans)
+      (gemm VT VT :transa :conjtrans)
+      :eps *eps-double*))
+
+  
+
 )

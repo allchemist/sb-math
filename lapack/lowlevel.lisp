@@ -47,7 +47,7 @@
   :aliens ((ju char jobu) (jvt char jobvt)
 	   (m integer dim0) (n integer dim1)
 	   (A array) (lda integer dim0) (S array) (u array)
-	   (ldu integer (dim0 u)) (vt array) (ldvt integer (dim0 vt)) (work array)
+	   (ldu integer (dim1 u)) (vt array) (ldvt integer (dim1 vt)) (work array)
 	   (lwork integer (dim0 work)) (complex-only (rwork array)) (info integer 0)))
 
 (define-lapack-wrapper geev

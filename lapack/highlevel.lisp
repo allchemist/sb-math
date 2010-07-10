@@ -54,7 +54,7 @@
 	 (S (make-matrix min-dim :element-type real-type))
 	 (U (make-matrix (ecase left
 			   (:none '(1 1))
-			   (:singular `(,min-dim dim0))
+			   (:singular `(,min-dim ,dim0))
 			   (:all `(,dim0 ,dim0)))
 			 :element-type type))
 	 (VT (make-matrix (ecase right
