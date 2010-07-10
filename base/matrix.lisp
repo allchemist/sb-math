@@ -36,9 +36,9 @@
 
 (defmacro do-rows ((matrix row) &body body)
   (let ((i (gensym)))
-    `(dotimes (i (dim0 ,matrix))
-       (setf ,row (row-bind ,matrix i))
-       ,@body)))
+    `(dotimes (,i (dim0 ,matrix))
+       (let ((,row (row-bind ,matrix ,i)))
+	 ,@body))))
 
 (defun map-matrix (matrix func)
   (let ((vec (sb-ext:array-storage-vector matrix)))
