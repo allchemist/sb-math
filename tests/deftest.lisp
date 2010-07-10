@@ -36,7 +36,10 @@
 
 (defun run-tests (&rest tests)
   (flet ((test-file (test)
-	   (let ((file (concatenate 'string *path-to-tests* test)))
+	   (let ((file (concatenate 'string
+				    *path-to-tests* 
+				    (string-downcase (string test))
+				    "-tests.lisp")))
 	     (if (probe-file file) file (error "File ~A not found" file)))))
     (setf *passed* nil
 	  *asserted* nil)
@@ -46,5 +49,4 @@
     (format *query-io* "; These units asserted: ~A~%" (or *asserted* "none"))))
 
 (defun run-all-tests ()
-  (run-tests "tests-single.lisp" "tests-double.lisp"
-	     "tests-complex-single.lisp" "tests-complex-double.lisp"))
+  (run-tests :alien-matrix :blas :lapack))

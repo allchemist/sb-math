@@ -47,8 +47,10 @@
 	    :depends-on (base lib blas alien-matrix)
 	    :components
 	    ((:file "module")
-	     (:file "matrix-product" :depends-on ("module"))))
+	     (:file "matrix-product" :depends-on ("module"))
+	     (:file "svd" :depends-on ("module"))))
+
    (:module tests
-	    :depends-on (base lib blas alien-matrix)
+	    :depends-on (base lib alien-matrix blas lapack applications)
 	    :components
 	    ((:file "deftest")))))
