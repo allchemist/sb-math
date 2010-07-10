@@ -36,7 +36,7 @@
 
 (defmacro do-rows ((matrix row) &body body)
   (let ((i (gensym)))
-    `(dotimes (i (dim1 ,matrix))
+    `(dotimes (i (dim0 ,matrix))
        (setf ,row (row-bind ,matrix i))
        ,@body)))
 
