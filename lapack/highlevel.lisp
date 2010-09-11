@@ -7,7 +7,8 @@
     (let ((copy-A (copy A))
 	  (ipiv (make-matrix dim :element-type '(unsigned-byte 32))))
       (sb-sys:with-pinned-objects (copy-A ipiv)
-	(funcall (with-function-choice 'getrf element-type t) copy-A ipiv))
+	(float-choice-funcall element-type getrf nil
+			      copy-A ipiv))
       (values copy-A ipiv))))
 
 (defun lu-inverse (A)
@@ -22,7 +23,8 @@
 						 (second element-type)
 						 element-type))))
 	(sb-sys:with-pinned-objects (LU P work)
-	  (funcall (with-function-choice 'getri element-type t) LU P work))
+	  (float-choice-funcall element-type getri nil
+				LU P work))
 	LU))))
 
 (defun lu-solve (A B &key (trans :notrans))
@@ -39,7 +41,7 @@
     (multiple-value-bind (LU P)
 	(lu real-A)
       (sb-sys:with-pinned-objects (LU X P)
-	(funcall (with-function-choice 'getrs element-type t)
+	(float-choice-funcall element-type getrs nil
 		 (lapack-char-code real-trans) LU X P))
       (if (vectorp B) (copy X) (transpose X)))))
 
@@ -67,7 +69,7 @@
 	 (rwork (when complex? (make-matrix (* 5 min-dim) :element-type real-type))))
     (let ((info
 	   (sb-sys:with-pinned-objects (AT S U VT work)
-	     (apply (with-function-choice 'gesvd type t)
+	     (apply (float-function-choice gesvd type :no-% t)
 		    (lapack-char-code left) (lapack-char-code right)
 		    AT S U VT work (if complex? (list rwork) '())))))
       (cond ((zerop info)
@@ -110,7 +112,7 @@
     (assert (= dim (dim1 A)) nil "Matrix should be square")
     (let ((info
 	   (sb-sys:with-pinned-objects (A w wr wi vl vr work rwork)    
-	     (apply (with-function-choice 'geev type t)
+	     (apply (float-function-choice geev type :no-% t)
 		    `(,(lapack-char-code left) ,(lapack-char-code right) ,copy-A
 		       ,@(if complex? `(,w) `(,wr ,wi))
 		       ,vl ,vr ,work ,@(if complex? `(,rwork) '()))))))

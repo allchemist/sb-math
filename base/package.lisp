@@ -2,8 +2,11 @@
     (:use :sb-math-system :common-lisp :sb-alien)
   (:nicknames :mth))
 
+(in-package :sb-math)
+
 (export
- '(;; scalar.lisp
+ '(
+   ;; scalar.lisp
    in-type
    *default-type*
    square

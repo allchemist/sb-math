@@ -1,5 +1,12 @@
 (in-package :sb-math)
 
+(declaim (inline %sgetrf %dgetrf %cgetrf %zgetrf
+		 %sgetri %dgetri %cgetri %zgetri
+		 %sgetrs %dgetrs %cgetrs %zgetrs
+		 %sgesvd %dgesvd %cgesvd %zgesvd
+		 %sgeev %dgeev %cgeev %zgeev))
+
+
 (define-lapack-routine getrf void
   ((m integer) (n integer) (a float) (lda integer) (ipiv ub32) (info integer)))
 

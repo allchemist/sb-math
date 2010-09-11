@@ -7,13 +7,19 @@
 (defun random-value (max-value)
   (- max-value (random (* max-value 2))))
 
+;; factorial
+
+(declaim (ftype (function (fixnum fixnum) fixnum) %!))
 (defun %! (n acc)
+  (declare (type fixnum n acc)
+	   (optimize speed (safety 0)))
   (if (<= n 1)
       acc
       (%! (- n 1) (* acc n))))
+(declaim (ftype (function (fixnum) fixnum) !))
+(defun ! (n) (%! n 1))
 
-(defun ! (n)
-  (%! n 1))
+;; simple random generators
 
 (defun simple-rng (x)
   (etypecase x
@@ -33,6 +39,8 @@
 	  ((equal element-type '(complex double-float))
 	   (complex (mod-fn (random 1d0)) (mod-fn (random 1d0))))
 	  (t (error "element-type is not float")))))
+
+;; approx equality
 						      
 (defgeneric ~= (X Y eps))
 

@@ -1,37 +1,48 @@
 (in-package :sb-math)
 
+(declaim (inline sdsdot dsdot sdot ddot cdotu cdotc zdotu zdotc
+		 sger dger cger zger))
+
 ;; dot
 
 (defun sdsdot (X Y alpha)
-  (%sdsdot (array-total-size X) alpha (array-sap X) 1 (array-sap Y) 1))
+  (%sdsdot (min (array-total-size X) (array-total-size Y))
+	   alpha (array-sap X) 1 (array-sap Y) 1))
 
 (defun dsdot (X Y)
-  (%dsdot (array-total-size X) (array-sap X) 1 (array-sap Y) 1))
+  (%dsdot (min (array-total-size X) (array-total-size Y))
+	  (array-sap X) 1 (array-sap Y) 1))
 
 (defun sdot (X Y)
-  (%sdot (array-total-size X) (array-sap X) 1 (array-sap Y) 1))
+  (%sdot (min (array-total-size X) (array-total-size Y))
+	 (array-sap X) 1 (array-sap Y) 1))
 
 (defun ddot (X Y)
-  (%ddot (array-total-size X) (array-sap X) 1 (array-sap Y) 1))
+  (%ddot (min (array-total-size X) (array-total-size Y))
+	 (array-sap X) 1 (array-sap Y) 1))
 
 (defun cdotu (X Y)
   (let ((dotu #C(1.0 0.0)))
-    (%cdotu_sub (array-total-size X) (array-sap X) 1 (array-sap Y) 1 (complex-sap dotu))
+    (%cdotu_sub (min (array-total-size X) (array-total-size Y))
+		(array-sap X) 1 (array-sap Y) 1 (complex-sap dotu))
     dotu))
 
 (defun cdotc (X Y)
   (let ((dotc #C(1.0 0.0)))
-    (%cdotc_sub (array-total-size X) (array-sap X) 1 (array-sap Y) 1 (complex-sap dotc))
+    (%cdotc_sub (min (array-total-size X) (array-total-size Y))
+		(array-sap X) 1 (array-sap Y) 1 (complex-sap dotc))
     dotc))
 
 (defun zdotu (X Y)
   (let ((dotu #C(1d0 0d0)))
-    (%zdotu_sub (array-total-size X) (array-sap X) 1 (array-sap Y) 1 (complex-sap dotu))
+    (%zdotu_sub (min (array-total-size X) (array-total-size Y))
+		(array-sap X) 1 (array-sap Y) 1 (complex-sap dotu))
     dotu))
 
 (defun zdotc (X Y)
   (let ((dotc #C(1d0 0d0)))
-    (%zdotc_sub (array-total-size X) (array-sap X) 1 (array-sap Y) 1 (complex-sap dotc))
+    (%zdotc_sub (min (array-total-size X) (array-total-size Y))
+		(array-sap X) 1 (array-sap Y) 1 (complex-sap dotc))
     dotc))
 
 ;; ger

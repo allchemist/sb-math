@@ -13,7 +13,7 @@
   (elt (svd A) 0))
 
 (defun fm-norm (A)
-  (sqrt (asum (map-matrix
+  (sqrt (amsum (map-matrix
 	       (svd A)
 	      #'square))))
 

@@ -9,7 +9,7 @@
 
 
 (defun cblas-alien-name (type name)
-  (concat-as-strings (list 'cblas_ type name)))
+  (concat-as-strings 'cblas_ type name))
 
-(defun define-blas-routine (name result &rest args)
-  (%define-foreign-routine name result #'cblas-alien-name args))
+(defmacro define-blas-routine (name result &rest args)
+  `(%define-foreign-routine ,name ,result ,#'cblas-alien-name ,args))

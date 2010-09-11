@@ -9,7 +9,7 @@
 		nil "Improper destination dimensions for transposition")
 	(setf dest (make-matrix (list dim1 dim0) :element-type element-type)))
     (sb-sys:with-pinned-objects (matrix dest)
-      (funcall (with-function-choice 'trans element-type)
+      (float-choice-funcall element-type trans %
 	       (array-sap matrix) (array-sap dest) dim0 dim1))
     dest))
 
@@ -22,7 +22,7 @@
 	(assert (>= (dim0 dest) dim0) nil "Column destination length is too little")
 	(setf dest (make-matrix dim0 :element-type element-type)))
     (sb-sys:with-pinned-objects (matrix dest)
-      (funcall (with-function-choice 'col element-type)
+      (float-choice-funcall element-type col %
 	       (array-sap matrix) (array-sap dest) dim0 dim1 col))
     dest))
 
@@ -33,7 +33,7 @@
     (assert (< col dim1) nil "Column index is larger than maximum")
     (assert (= (dim0 source) dim0) nil "Improper column length")
     (sb-sys:with-pinned-objects (matrix source)
-      (funcall (with-function-choice 'setcol element-type)
+      (float-choice-funcall element-type setcol %
 	       (array-sap matrix) (array-sap source) dim0 dim1 col))
     matrix))
 
@@ -46,7 +46,7 @@
 	(assert (>= (dim0 dest) dim1) nil "Row destination length is too little")
 	(setf dest (make-matrix dim1 :element-type element-type)))
     (sb-sys:with-pinned-objects (matrix dest)
-      (funcall (with-function-choice 'row element-type)
+      (float-choice-funcall element-type row %
 	       (array-sap matrix) (array-sap dest) dim0 dim1 row))
     dest))
 
@@ -57,7 +57,7 @@
     (assert (< row dim0) nil "Row index is larger than maximum")
     (assert (= (dim0 source) dim1) nil "Improper row length")
     (sb-sys:with-pinned-objects (matrix source)
-      (funcall (with-function-choice 'setrow element-type)
+      (float-choice-funcall element-type setrow %
 	       (array-sap matrix) (array-sap source) dim0 dim1 row))
     matrix))
 
@@ -72,7 +72,7 @@
 		nil "Improper destination matrix dimensions")
 	(setf dest (make-matrix (list dim0 dim1) :element-type element-type)))
     (sb-sys:with-pinned-objects (matrix perm dest)
-      (funcall (with-function-choice 'rowperm element-type)
+      (float-choice-funcall element-type rowperm %
 	       (array-sap matrix) (array-sap perm) (array-sap dest) dim0 dim1))
     dest))
 
@@ -103,7 +103,7 @@
 		nil "Improper destination matrix dimensions")
 	(setf dest (make-matrix dimensions :element-type element-type)))
     (sb-sys:with-pinned-objects (matrix dest)
-      (funcall (with-function-choice 'submatrix element-type)
+      (float-choice-funcall element-type submatrix %
 	       (array-sap matrix) (array-sap dest) dim0 dim1
 	       x-offset y-offset sub-dim0 sub-dim1))
     dest))
@@ -122,7 +122,7 @@
     (assert (and (>= x-offset 0) (>= y-offset 0))
 	    nil "Start position must be positive")
     (sb-sys:with-pinned-objects (matrix source)
-      (funcall (with-function-choice 'setsubmatrix element-type)
+      (float-choice-funcall element-type setsubmatrix %
 	       (array-sap matrix) (array-sap source) dim0 dim1
 	       x-offset y-offset sub-dim0 sub-dim1))
     matrix))
@@ -130,7 +130,7 @@
 (defun m+c (matrix const)
   (let ((type (array-element-type matrix)))
     (sb-sys:with-pinned-objects (matrix const)
-      (funcall (with-function-choice 'mplusc type)
+      (float-choice-funcall type mplusc %
 	       (array-sap matrix) (maybe-complex (coerce const type)) (array-total-size matrix)))
     matrix))
 
@@ -142,50 +142,51 @@
   (assert (equal (array-dimensions m1) (array-dimensions m2))
 	  nil "Matrices has unequal dimensions")
   (sb-sys:with-pinned-objects (m1 m2)
-    (funcall (with-function-choice 'mmult (array-element-type m1))
-	     (array-sap m1) (array-sap m2) (array-total-size m1)))
+    (float-choice-funcall (array-element-type m1) mmult %
+			  (array-sap m1) (array-sap m2) (array-total-size m1)))
   m1)
 
 (defun imin (matrix)
   (let ((element-type (array-element-type matrix)))
     (assert (not (subtypep element-type 'complex)) nil "This function is not applicable for complex data")
     (sb-sys:with-pinned-objects (matrix)
-      (funcall (ecase element-type
-		 (single-float #'%simin)
-		 (double-float #'%dimin))
-	       (array-sap matrix) (array-total-size matrix)))))
+      (ecase element-type
+	(single-float (%simin (array-sap matrix) (array-total-size matrix)))
+	(double-float (%dimin (array-sap matrix) (array-total-size matrix)))))))
 
 (defun mmin (matrix)
+  (declare (inline imin))
   (row-major-aref matrix (imin matrix)))
 
 (defun imax (matrix)
   (let ((element-type (array-element-type matrix)))
     (assert (not (subtypep element-type 'complex)) nil "This function is not applicable for complex data")
     (sb-sys:with-pinned-objects (matrix)
-      (funcall (ecase element-type
-		 (single-float #'%simax)
-		 (double-float #'%dimax))
-	       (array-sap matrix) (array-total-size matrix)))))
+      (ecase element-type
+	(single-float (%simax (array-sap matrix) (array-total-size matrix)))
+	(double-float (%dimax (array-sap matrix) (array-total-size matrix)))))))
 
 (defun mmax (matrix)
+  (declare (inline imax))
   (row-major-aref matrix (imax matrix)))
 
 (defun iamin (matrix)
   (sb-sys:with-pinned-objects (matrix)
-    (funcall (with-function-choice 'iamin (array-element-type matrix))
+    (float-choice-funcall (array-element-type matrix) iamin %
 	     (array-sap matrix) (array-total-size matrix))))
 
 (defun ammin (matrix)
+  (declare (inline iamin))
   (row-major-aref matrix (iamin matrix)))
 
 (defun msum (matrix)
   (let ((element-type (array-element-type matrix)))
     (assert (not (subtypep element-type 'complex)) nil "This function is not applicable for complex data")
     (sb-sys:with-pinned-objects (matrix)
-      (funcall (ecase element-type
-		 (single-float #'%smsum)
-		 (double-float #'%dmsum))
-	       (array-sap matrix) (array-total-size matrix)))))
+       (ecase element-type
+	(single-float (%smsum (array-sap matrix) (array-total-size matrix)))
+	(double-float (%dmsum (array-sap matrix) (array-total-size matrix)))))))
 
 (defun mean (matrix)
+  (declare (inline msum))
   (/ (msum matrix) (array-total-size matrix)))

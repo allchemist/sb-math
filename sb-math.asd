@@ -6,7 +6,7 @@
 (defsystem sb-math
   :description "Mathematics through SBCL alien interface"
   :licence "BSD"
-  :version "0.9"
+  :version "0.9.1"
   :depends-on ()
   :components
   ((:module base

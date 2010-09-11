@@ -1,7 +1,11 @@
 (in-package :sb-math)
 
 (defparameter *libs* nil)
-(defparameter *root-path* (namestring (asdf:component-relative-pathname (asdf:find-system :sb-math))))
+(defparameter *root-path*
+  (let ((path (namestring (asdf:component-relative-pathname (asdf:find-system :sb-math)))))
+    (if (search ".asd" path)
+	(subseq path 0 (1+ (position #\/ path :from-end t)))
+	path)))
 
 (defun define-foreign-library (name &rest pathnames)
   (push
@@ -20,15 +24,18 @@
   (map nil #'load-shared-object (second (assoc name *libs*))))
 
 
-(when (not (probe-file (concatenate 'string *root-path* "lib/libsbmath.so")))
-  (format *query-io* "; Compiling C source~%")
-  (if (zerop
-       (sb-ext:process-exit-code
-	(sb-ext:run-program 
-	 (concatenate 'string *root-path* "lib/build_c_source.sh")
-	 (list *root-path*))))
-      (format *query-io* "; Successfully~%")
-      (cerror "Continue anyway" "Compiling C source returned non-zero code")))
+(defun compile-c-source ()
+  (when (not (probe-file (concatenate 'string *root-path* "lib/libsbmath.so")))
+    (format *query-io* "; Compiling C source~%")
+    (if (zerop
+	 (sb-ext:process-exit-code
+	  (sb-ext:run-program 
+	   (concatenate 'string *root-path* "lib/build_c_source.sh")
+	   (list *root-path*))))
+	(format *query-io* "; Successfully~%")
+	(cerror "Continue anyway" "Compiling C source returned non-zero code"))))
+
+(compile-c-source)
 
 (define-foreign-library :alien-matrix "lib/libsbmath.so")
 

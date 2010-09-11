@@ -22,12 +22,12 @@
     (z 'system-area-pointer)))
 
 (defun same-alien-name (type name)
-  (concat-as-strings (list type name)))
+  (concat-as-strings type name))
 
 (defmacro %define-foreign-routine (name result alien-name-fn args)
   (let ((defs nil))
     (dolist (type '(s d c z))
-      (let ((fullname (intern (concat-as-strings (list '% type name)) :sb-math))
+      (let ((fullname (intern (concat-as-strings '% type name) :sb-math))
 	    (alien-name (funcall alien-name-fn type name)))
 	(push `(define-alien-routine (,(string-downcase alien-name) ,fullname)
 		   ,(if (eq result 'float) (float-result-type type) result)

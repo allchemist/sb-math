@@ -4,10 +4,11 @@
 
 (in-package :sb-math)
 
+(export '(run-tests run-all-tests))
+
 (defparameter *path-to-tests*
   (concatenate 'string
-	       (namestring (asdf:component-relative-pathname
-			    (asdf:find-system :sb-math)))
+	       *root-path*
 	       "tests/"))
 
 (defparameter *passed* nil)
@@ -26,11 +27,11 @@
 	  (format *query-io* "; Test ~A asserted~%" name)
 	  (format *query-io* "; Difference between~%")
 	  (print-matrix test
-			:prec (with-float-type-choice (array-element-type test) 7 16 7 16)
+			:prec (float-type-choice (array-element-type test) 7 16 7 16)
 			:dest *query-io*)
 	  (format *query-io* "~%and~%")
 	  (print-matrix compare
-			:prec (with-float-type-choice (array-element-type compare) 7 16 7 16)
+			:prec (float-type-choice (array-element-type compare) 7 16 7 16)
 			:dest *query-io*)
 	  (format *query-io* "~% is more than epsilon: ~A~%" eps)))))	  
 

@@ -99,4 +99,4 @@
       (setf (aref new-v 1) (coerce (aref v 0) type))
       (setf (aref new-v 2) (coerce (aref v 1) type))
       (setf (aref new-v 3) (coerce (aref v 2) type))
-      (subseq (q-prod (q-prod q new-v) (q-invert (copy-vector q))) 1 4))))
+      (subseq (q-prod (q-prod q new-v) (q-invert (copy q))) 1 4))))

@@ -1,5 +1,7 @@
 (in-package :sb-math)
 
+;; generic matrix product
+
 (defgeneric matrix-product (m1 m2 &rest keys &key dest &allow-other-keys))
 
 (defmethod matrix-product ((m1 vector) (m2 vector)
@@ -31,3 +33,22 @@
 			   &rest keys &key dest &allow-other-keys)
   (print 'hermitian-to-vector)
   (apply #'hpmv m1 m2 :dest dest keys))
+
+
+;; basis rotation
+
+(defun orthogonal-basis-transform (basis rotation)
+  (gemm (gemm rotation basis) rotation :transb :trans))
+
+(defun general-basis-transform (basis rotation)
+  (gemm (gemm rotation basis) (lu-inverse rotation)))
+
+;; chain matrix multiplication
+
+(defun cmm3 (m1 m2 m3)
+  (if (< (+ (* (dim0 m1) (dim1 m1) (dim1 m2))
+	    (* (dim0 m1) (dim1 m2) (dim1 m3)))
+	 (+ (* (dim0 m2) (dim1 m2) (dim1 m3))
+	    (* (dim0 m1) (dim1 m1) (dim1 m3))))
+      (gemm (gemm m1 m2) m3)
+      (gemm m1 (gemm m2 m3))))

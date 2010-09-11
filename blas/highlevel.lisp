@@ -5,33 +5,36 @@
 
 (defun inner-prod (X Y &key (conjY :noconj))
   (sb-sys:with-pinned-objects (X Y)
-    (assert (= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for inner-prod")
-    (funcall (with-float-type-choice (array-element-type X)
-	       #'sdot #'ddot
-	       (ecase conjY (:conj #'cdotc) (:noconj #'cdotu)) 
-	       (ecase conjY (:conj #'zdotc) (:noconj #'zdotu)))
-	     X Y)))
+    (float-type-choice
+     (array-element-type X) (sdot X Y) (ddot X Y)
+     (ecase conjY (:conj (cdotc X Y)) (:noconj (cdotu X Y)))
+     (ecase conjY (:conj (zdotc X Y)) (:noconj (zdotu X Y))))))
 
 (defun e-norm (X)
   (sb-sys:with-pinned-objects (X)
-    (funcall (with-float-type-choice (array-element-type X)
-	       #'%snrm2 #'%dnrm2 #'%scnrm2 #'%dznrm2)
-	     (array-total-size X) (array-sap X) 1)))
+    (float-type-choice
+     (array-element-type X)
+     (%snrm2 (array-total-size X) (array-sap X) 1)
+     (%dnrm2 (array-total-size X) (array-sap X) 1)
+     (%scnrm2 (array-total-size X) (array-sap X) 1)
+     (%dznrm2 (array-total-size X) (array-sap X) 1))))
 
 (defun normalize (X)
   (m*c X (/ (e-norm X))))
 
 (defun amsum (X)
   (sb-sys:with-pinned-objects (X)
-    (funcall (with-float-type-choice (array-element-type X)
-	       #'%sasum #'%dasum #'%scasum #'%dzasum)
-	     (array-total-size X) (array-sap X) 1)))
+    (float-type-choice
+     (array-element-type X)
+     (%sasum (array-total-size X) (array-sap X) 1)
+     (%dasum (array-total-size X) (array-sap X) 1)
+     (%scasum (array-total-size X) (array-sap X) 1)
+     (%dzasum (array-total-size X) (array-sap X) 1))))
 
 (defun iamax (X)
   (sb-sys:with-pinned-objects (X)
-    (funcall (with-float-type-choice (array-element-type X)
-	       #'%isamax #'%idamax #'%icamax #'%izamax)
-	     (array-total-size X) (array-sap X) 1)))
+    (float-choice-funcall (array-element-type X) amax %i
+			  (array-total-size X) (array-sap X) 1)))
 
 (defun ammax (X)
   (row-major-aref X (iamax X)))
@@ -39,47 +42,54 @@
 (defun swap (X Y)
   (sb-sys:with-pinned-objects (X Y)
     (assert (= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for swap")
-    (funcall (with-function-choice 'swap (array-element-type X))
-	     (array-total-size X) (array-sap X) 1 (array-sap Y) 1) Y))
+    (float-choice-funcall (array-element-type X) swap %
+			  (array-total-size X) (array-sap X) 1 (array-sap Y) 1) 
+    Y))
 
 (defun copy (X &optional Y)
   (if Y
       (assert (<= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for copy")
-      (setf Y (make-array (array-dimensions X) :element-type (array-element-type X))))
+      (setf Y (make-matrix-like X)))
   (sb-sys:with-pinned-objects (X Y)
-    (funcall (with-function-choice 'copy (array-element-type X))
-	     (array-total-size X) (array-sap X) 1 (array-sap Y) 1) Y))
+    (float-choice-funcall (array-element-type X) copy %
+			  (array-total-size X) (array-sap X) 1 (array-sap Y) 1)
+    Y))
 
 (defun copy-with-offset (X Y offset)
+  (declare (sb-ext:muffle-conditions sb-ext:code-deletion-note))
+  ;; ignore notes about deleting unreachable code
+  ;; its OK, and also very good
   (assert (<= (array-total-size X) (- (array-total-size Y) offset)) nil
 	  "Improper dimensions for copy-with-offset")
   (sb-sys:with-pinned-objects (X Y)
     (let ((type (array-element-type X)))
-      (funcall
-       (with-function-choice 'copy type)
-       (array-total-size X) (array-sap X) 1
-       (sb-sys:sap+ (array-sap Y)
-		    (* offset
-		       (float-sizeof type)))
-       1)
+       (float-choice-funcall type copy %
+			     (array-total-size X) (array-sap X) 1
+			     (sb-sys:sap+ (array-sap Y)
+					  (* offset
+					     (float-sizeof type)))
+			     1)
       Y)))
 
 (defun axpy (X Y alpha)
+  (declare (sb-ext:unmuffle-conditions sb-ext:code-deletion-note))
   (sb-sys:with-pinned-objects (X Y alpha)
     (assert (<= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for axpy")
     (let ((type (array-element-type X)))
-      (funcall (with-function-choice 'axpy type)
-	       (array-total-size X) (maybe-complex (coerce alpha type)) (array-sap X) 1 (array-sap Y) 1))
+      (float-choice-funcall type axpy %
+			    (array-total-size X) (maybe-complex (coerce alpha type))
+			    (array-sap X) 1 (array-sap Y) 1))
     Y))
 
-(defun m+ (m1 m2) (axpy m2 m1 1))
-(defun m- (m1 m2) (axpy m2 m1 -1))
+(defun m+ (m1 m2) (declare (inline axpy)) (axpy m2 m1 1))
+(defun m- (m1 m2) (declare (inline axpy)) (axpy m2 m1 -1))
 
 (defun m*c (X alpha)
   (sb-sys:with-pinned-objects (X)
     (let ((type (array-element-type X)))
-      (funcall (with-function-choice 'scal type)
-	       (array-total-size X) (maybe-complex (coerce alpha type)) (array-sap X) 1))
+      (float-choice-funcall type scal %
+			    (array-total-size X) (maybe-complex (coerce alpha type))
+			    (array-sap X) 1))
     X))
 
 ;;; ==============================================================
@@ -98,8 +108,7 @@
 	  (assert (<= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
 	  (setf dest (make-matrix dim0 :element-type type)))
       (sb-sys:with-pinned-objects (A X dest alpha beta)
-	(funcall
-	 (with-function-choice 'gemv type)
+	(float-choice-funcall type gemv %
 	 'CblasRowMajor transA (dim0 A) (dim1 A) (maybe-complex (coerce alpha type))
 	 (array-sap A) (dim1 A) (array-sap X) 1 (maybe-complex (coerce beta type))
 	 (array-sap dest) 1)
@@ -113,8 +122,8 @@
 		nil "Improper dimensions for ger")
 	(setf dest (make-matrix (list (dim0 X) (dim0 Y)) :element-type type)))
     (sb-sys:with-pinned-objects (dest X Y alpha)
-      (funcall (with-float-type-choice  type #'sger #'dger #'cger #'zger)
-	       dest X Y (coerce alpha type) conj)
+      (float-choice-funcall type ger nil
+			    dest X Y (coerce alpha type) conj)
       dest)))
 
 ;; X contents is substituted!
@@ -122,7 +131,7 @@
   (let ((dim (dim0 A)))
     (assert (= dim (dim1 A) (dim0 X)) nil "Improper dimesions for trmv")
     (sb-sys:with-pinned-objects (A X)
-      (funcall (with-function-choice 'trmv (array-element-type A))
+      (float-choice-funcall (array-element-type A) trmv %
 	       'CBlasRowMajor uplo transA :nonunit dim (array-sap A) dim (array-sap X) 1)
       X)))
 
@@ -135,8 +144,7 @@
 	  (assert (<= dim (dim0 dest)) nil "Improper dimensions for symv")
 	  (setf dest (make-matrix dim :element-type type)))
       (sb-sys:with-pinned-objects (A X dest)
-	(funcall
-	 (with-function-choice 'symv type)
+	(float-choice-funcall type symv %
 	 'CBlasRowMajor uplo dim (coerce alpha type) (array-sap A) dim
 	 (array-sap X) 1 (coerce beta type) (array-sap dest) 1)
 	dest))))
@@ -150,8 +158,7 @@
 	  (assert (<= dim (dim0 dest)) nil "Improper dimensions for hemv")
 	  (setf dest (make-matrix dim :element-type type)))
       (sb-sys:with-pinned-objects (A X dest alpha beta)
-	(funcall
-	 (with-function-choice 'hemv type)
+	(float-choice-funcall type hemv %
 	 'CBlasRowMajor uplo dim (complex-sap (coerce alpha type)) (array-sap A) dim
 	 (array-sap X) 1 (complex-sap (coerce beta type)) (array-sap dest) 1)
 	dest))))
@@ -164,7 +171,7 @@
 	  (setf dest (make-matrix (list dim dim) :element-type type)))
       (assert (not (subtypep type 'complex)) nil "Symetric matrix should be real")
       (sb-sys:with-pinned-objects (dest X)
-	(funcall (with-function-choice 'syr type)
+	(float-choice-funcall type syr %
 		 'CBlasRowMajor uplo dim (coerce alpha type)
 		 (array-sap X) 1 (array-sap dest) dim)
 	dest))))
@@ -177,7 +184,7 @@
 	  (setf dest (make-matrix (list dim dim) :element-type type)))
       (assert (subtypep type 'complex) nil "Hermitian matrix should be complex")
       (sb-sys:with-pinned-objects (dest X alpha)
-	(funcall (with-function-choice 'her type)
+	(float-choice-funcall type her %
 		 'CBlasRowMajor uplo dim (complex-sap (coerce alpha type))
 		 (array-sap X) 1 (array-sap dest) dim)
 	dest))))
@@ -227,8 +234,7 @@
 		  nil "Improper dimensions for gemm")
 	  (setf dest (make-matrix (list M N) :element-type type)))
       (sb-sys:with-pinned-objects (A B dest alpha beta)
-	(funcall
-	 (with-function-choice 'gemm type)
+	(float-choice-funcall type gemm %
 	 'CblasRowMajor transA transB
 	 M N K (maybe-complex (coerce alpha type)) (array-sap A) LDA
 	 (array-sap B) LDB (maybe-complex (coerce beta type))
@@ -243,7 +249,7 @@
   (let ((dim (ldm Ap)))
     (assert (= dim (dim0 X)) nil "Improper dimesions for tpmv")
     (sb-sys:with-pinned-objects (Ap X)
-      (funcall (with-function-choice 'tpmv (pmatrix-element-type Ap))
+      (float-choice-funcall (pmatrix-element-type Ap) tpmv %
 	       'CBlasRowMajor uplo transA :nonunit dim (pmatrix-sap Ap) (array-sap X) 1)
       X)))
 
@@ -256,8 +262,7 @@
 	  (assert (<= dim (dim0 dest)) nil "Improper dimensions for spmv")
 	  (setf dest (make-matrix dim :element-type type)))
       (sb-sys:with-pinned-objects (Ap X dest)
-	(funcall
-	 (with-function-choice 'spmv type)
+	(float-choice-funcall type spmv %
 	 'CBlasRowMajor uplo dim (coerce alpha type) (pmatrix-sap Ap)
 	 (array-sap X) 1 (coerce beta type) (array-sap dest) 1)
 	dest))))
@@ -271,8 +276,7 @@
 	  (assert (<= dim (dim0 dest)) nil "Improper dimensions for hpmv")
 	  (setf dest (make-matrix dim :element-type type)))
       (sb-sys:with-pinned-objects (Ap X dest alpha beta)
-	(funcall
-	 (with-function-choice 'hpmv type)
+	(float-choice-funcall type hpmv %
 	 'CBlasRowMajor uplo dim (complex-sap (coerce alpha type)) (pmatrix-sap Ap)
 	 (array-sap X) 1 (complex-sap (coerce beta type)) (array-sap dest) 1)
 	dest))))
@@ -288,9 +292,9 @@
 				   :upper? (eq uplo :upper))))
       (assert (not (subtypep type 'complex)) nil "Symetric matrix should be real")
       (sb-sys:with-pinned-objects (dest X)
-	(funcall (with-function-choice 'spr type)
+	(float-choice-funcall type spr %
 		 'CBlasRowMajor uplo dim (coerce alpha type)
-		 (array-sap X) 1 (pmatrix-sap dest) dim)
+		 (array-sap X) 1 (pmatrix-sap dest))
 	dest))))
 
 (defun hpr (X &key dest (alpha #C(1.0 0.0)) (uplo :upper))
@@ -304,7 +308,8 @@
 				   :upper? (eq uplo :upper))))
       (assert (subtypep type 'complex) nil "Hermitian matrix should be complex")
       (sb-sys:with-pinned-objects (dest X alpha)
-	(funcall (with-function-choice 'hpr type)
+	(float-choice-funcall type hpr %
 		 'CBlasRowMajor uplo dim (complex-sap (coerce alpha type))
-		 (array-sap X) 1 (pmatrix-sap dest) dim)
+		 (array-sap X) 1 (pmatrix-sap dest))
 	dest))))
+
