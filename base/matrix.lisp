@@ -22,8 +22,10 @@
   (let ((i (or (first subscripts) (gensym)))
 	(j (or (second subscripts) (gensym))))
     `(dotimes (,i (dim0 ,matrix))
+       (declare (type fixnum i))
        ,(if (second subscripts)
 	    `(dotimes (,j (dim1 ,matrix))
+	       (declare (type fixnum j))
 	       ,@body)
 	    `(progn
 	       ,@body)))))
@@ -40,19 +42,20 @@
        (let ((,row (row-bind ,matrix ,i)))
 	 ,@body))))
 
+;; general mapping
+
 (defun map-matrix (matrix func)
-  (let ((vec (sb-ext:array-storage-vector matrix)))
-    (do-matrix (vec i)
-      (setf (aref vec i) (funcall func (aref vec i))))
-  matrix))
+  (dotimes (i (array-total-size matrix))
+    (setf (row-major-aref matrix i)
+	  (funcall func (row-major-aref matrix i))))
+  matrix)
 
 (defun map-two-matrices (m1 m2 func)
-  (let ((v1 (sb-ext:array-storage-vector m1))
-	(v2 (sb-ext:array-storage-vector m2)))
-    (do-matrix (v1 i)
-      (setf (aref v1 i)
-	    (funcall func (aref v1 i) (aref v2 i))))
-    m1))
+  (assert (= (array-total-size m1) (array-total-size m2)) nil "Matrix sizes not equal")
+  (dotimes (i (array-total-size m1))
+    (setf (row-major-aref v1 i)
+	  (funcall func (row-major-aref v1 i) (row-major-aref v2 i))))
+  m1)
 
 (defun make-random-matrix (dimensions &key
 			   (element-type *default-type*)

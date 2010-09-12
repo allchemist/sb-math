@@ -467,3 +467,64 @@ double dmsum (double array[], int size)
   }
   return sum;
 }
+
+// mapping matrices
+
+void smapmatrix (float array[], int size, float (*fn)(float x))
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]=(*fn)(array[pos]);
+}
+
+void dmapmatrix (double array[], int size, double (*fn)(double x))
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]=(*fn)(array[pos]);
+}
+
+void cmapmatrix (float complex array[], int size, float complex (*fn)(float complex x))
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]=(*fn)(array[pos]);
+}
+
+void zmapmatrix (double complex array[], int size, double complex (*fn)(double complex x))
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]=(*fn)(array[pos]);
+}
+
+// sample mapping
+#|
+void ssqmatrix (float array[], int size)
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]=tanh(array[pos]);
+}
+
+void dsqmatrix (double array[], int size)
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]++;
+}
+
+void csqmatrix (float complex array[], int size)
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]++;
+}
+
+void zsqmatrix (double complex array[], int size)
+{
+  int pos;
+  for (pos=0; pos < size; pos++)
+    array[pos]++;
+}
+|#

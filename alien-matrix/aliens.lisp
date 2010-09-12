@@ -62,3 +62,13 @@
 
 (define-foreign-routine msum float
   (array (* float)) (size integer))
+
+;; mapping matrices
+
+(define-foreign-routine mapmatrix void
+  (array (* float)) (size integer) (fn (* float)))
+
+;; sample mapping
+
+(define-foreign-routine sqmatrix void
+  (array (* float)) (size integer))

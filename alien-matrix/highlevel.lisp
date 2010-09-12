@@ -190,3 +190,20 @@
 (defun mean (matrix)
   (declare (inline msum))
   (/ (msum matrix) (array-total-size matrix)))
+
+(defmacro map-matrix-cb (func matrix)
+  `(let ((element-type (array-element-type ,matrix)))
+     (sb-sys:with-pinned-objects (,matrix)
+       (float-type-choice
+	element-type
+	(%smapmatrix (array-sap ,matrix) (array-total-size ,matrix) (function-sap ,func single-float))
+	(%dmapmatrix (array-sap ,matrix) (array-total-size ,matrix) (function-sap ,func double-float))
+	(%cmapmatrix (array-sap ,matrix) (array-total-size ,matrix) (function-sap ,func system-area-pointer))
+	(%zmapmatrix (array-sap ,matrix) (array-total-size ,matrix) (function-sap ,func system-area-pointer))))
+     ,matrix))
+
+(defun sq-matrix (matrix)
+  (sb-sys:with-pinned-objects (matrix)
+    (float-choice-funcall (array-element-type matrix) sqmatrix %
+			  (array-sap matrix) (array-total-size matrix)))
+  matrix)

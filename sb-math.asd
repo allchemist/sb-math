@@ -6,7 +6,7 @@
 (defsystem sb-math
   :description "Mathematics through SBCL alien interface"
   :licence "BSD"
-  :version "0.9.1"
+  :version "0.9.2"
   :depends-on ()
   :components
   ((:module base
@@ -16,7 +16,8 @@
 	     (:file "quaternions" :depends-on ("package" "scalar"))
 	     (:file "reader-macro" :depends-on ("package"))
 	     (:file "interface" :depends-on ("package"))
-	     (:file "matrix" :depends-on ("package" "scalar"))))
+	     (:file "matrix" :depends-on ("package" "scalar"))
+	     (:file "mapping" :depends-on ("package" "scalar" "matrix"))))
    (:module lib
 	    :components
 	    ((:file "load-libs")))

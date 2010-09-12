@@ -78,8 +78,7 @@
       number))
 
 ;; callbacks
-#|
-(defmacro defcallback (name type func sap-ref-fn)
-  `(sb-alien::define-alien-callback ,name ,type ((x ,type))
-     (funcall ,func (funcall ,sap-ref-fn x 0))))
-|#
+
+(defmacro function-sap (func type)
+  `(alien-sap
+    (sb-alien::alien-lambda ,type ((x ,type)) ,(cdr `(,@func x)))))

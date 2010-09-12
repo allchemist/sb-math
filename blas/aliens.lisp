@@ -49,12 +49,15 @@
 	   ;; blas 3
 	   ))
 
-(eval
- `(progn ,@(map nil #'(lambda (name)
-			`(defun ,name (&rest args)
-			   (declare (ignore args))))
-		'(%CSPMV %CSPR %CSYMV %CSYR %DHEMV %DHER %DHPMV %DHPR
-		  %SHEMV %SHER %SHPMV %SHPR %ZSPMV %ZSPR %ZSYMV %ZSYR))))
+(defmacro define-nop-functions (&rest names)
+  `(progn ,@(mapcar #'(lambda (n)
+			 `(defun ,n (&rest args)
+			    (declare (ignore args))))
+		 names)))
+
+(define-nop-functions
+  %CSPMV %CSPR %CSYMV %CSYR %DHEMV %DHER %DHPMV %DHPR
+  %SHEMV %SHER %SHPMV %SHPR %ZSPMV %ZSPR %ZSYMV %ZSYR)
 
 ;;; general
 ;;; ==============================================================
