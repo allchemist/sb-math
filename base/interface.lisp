@@ -4,9 +4,6 @@
 
 ;; type defining
 
-(defun concat-as-strings (&rest args)
-  (apply #'concatenate 'string (mapcar #'string (remove nil args))))
-
 (defmacro float-type-choice (type single double complex-single complex-double)
   `(cond ((eq ,type 'single-float) ,single)
 	 ((eq ,type 'double-float) ,double)

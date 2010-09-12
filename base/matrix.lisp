@@ -55,8 +55,8 @@
 (defun map-two-matrices (m1 m2 func)
   (assert (= (array-total-size m1) (array-total-size m2)) nil "Matrix sizes not equal")
   (dotimes (i (array-total-size m1))
-    (setf (row-major-aref v1 i)
-	  (funcall func (row-major-aref v1 i) (row-major-aref v2 i))))
+    (setf (row-major-aref m1 i)
+	  (funcall func (row-major-aref m1 i) (row-major-aref m2 i))))
   m1)
 
 (defun make-random-matrix (dimensions &key
