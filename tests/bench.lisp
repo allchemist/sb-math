@@ -129,14 +129,14 @@
 
 (gplt:gplt-start)
 
-(defun plot-gemm-bench-results (bench-results &key near-zero)
+(defun plot-gemm-bench-results (bench-results &key max-dim)
   (with-open-file (s "/tmp/gemm_bench.dat"
 		     :direction :output
 		     :if-exists :supersede
 		     :if-does-not-exist :create)
     (dolist (r bench-results)
-      (when (and near-zero
-		 (> (first (first r)) 10))
+      (when (and max-dim
+		 (> (first (first r)) max-dim))
 	(return))
       (format s "~A ~A ~A ~A~%"
 	      (first (first r))
@@ -148,9 +148,9 @@
 			(fourth (first r)))))))
 
   (gplt:gplt-restart)
-  (if near-zero
+  (if max-dim
       (mapcar #'gplt:gplt-exec
-	   `((set title "'gemm benchmark, small dimensions'")
+	   `((set title "'gemm benchmark, limited dimension'")
 	     (set yrange (range 3 0.00002))
 	     (set xrange (range 3 10))
 	     (set xlabel " \"dimension\"")
@@ -166,14 +166,14 @@
   (gplt:gplt-exec '("plot '/tmp/gemm_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red' smooth csplines, '/tmp/gemm_bench.dat' using 1:3 title 'gsll' with lines lc rgb 'green' smooth csplines, '/tmp/gemm_bench.dat' using 1:4 title 'gcc' with lines lc rgb 'blue' smooth csplines"))
   (gplt:gplt-display))
 
-(defun plot-gemv-bench-results (bench-results &key near-zero)
+(defun plot-gemv-bench-results (bench-results &key max-dim)
   (with-open-file (s "/tmp/gemv_bench.dat"
 		     :direction :output
 		     :if-exists :supersede
 		     :if-does-not-exist :create)
     (dolist (r bench-results)
-      (when (and near-zero
-		 (> (first (first r)) 10))
+      (when (and max-dim
+		 (> (first (first r)) max-dim))
 	(return))
       (format s "~A ~A ~A ~A~%"
 	      (first (first r))
@@ -185,9 +185,9 @@
 			(third (first r)))))))
 
   (gplt:gplt-restart)
-  (if near-zero
+  (if max-dim
       (mapcar #'gplt:gplt-exec
-	   `((set title "'gemv benchmark, small dimensions'")
+	   `((set title "'gemv benchmark, limited dimension'")
 	     (set yrange (range 3 0.00002))
 	     (set xrange (range 3 10))
 	     (set xlabel " \"dimension\"")
