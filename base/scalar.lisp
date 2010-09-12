@@ -7,6 +7,11 @@
 (defun random-value (max-value)
   (- max-value (random (* max-value 2))))
 
+
+(defun concat-as-strings (&rest args)
+  (apply #'concatenate 'string (mapcar #'string (remove nil args))))
+
+
 ;; factorial
 
 (declaim (ftype (function (fixnum fixnum) fixnum) %!))

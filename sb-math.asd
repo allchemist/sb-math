@@ -17,7 +17,9 @@
 	     (:file "reader-macro" :depends-on ("package"))
 	     (:file "interface" :depends-on ("package"))
 	     (:file "matrix" :depends-on ("package" "scalar"))
-	     (:file "mapping" :depends-on ("package" "scalar" "matrix"))))
+	     (:file "mapping" :depends-on ("package" "scalar" "matrix"))
+	     (:file "typed-matrix" :depends-on ("package "scalar" "matrix" "mapping"))
+	     (:file "packed-matrix" :depends-on ("package" "scalar" "matrix" "mapping" "typed-matrix"))))
    (:module lib
 	    :components
 	    ((:file "load-libs")))

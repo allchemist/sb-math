@@ -32,17 +32,11 @@
 	    `(progn
 	       ,@body)))))
 
-(declaim (inline make-array))
 (defun row-bind (matrix row)
-  (declare (type (simple-array single-float) matrix)
-	   (type fixnum row)
-	   (inline dim1)
-	   (optimize speed (safety 0) (space 0)))
-  (make-array (dim1 matrix)
-	      :element-type 'single-float
+   (make-array (dim1 matrix)
+	      :element-type (array-element-type matrix)
 	      :displaced-to matrix
 	      :displaced-index-offset (* (dim1 matrix) row)))
-(declaim (notinline make-array))
 
 (defmacro do-rows ((matrix row) &body body)
   (let ((i (gensym)))
