@@ -163,7 +163,7 @@
 	     (set ylabel " \"time (sec/call)\""))))
   (gplt:gplt-exec '(set term png))
   (gplt:gplt-exec '(set out "'/tmp/gemm_bench.png'"))
-  (gplt:gplt-exec '("plot '/tmp/gemm_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red' smooth csplines, '/tmp/gemm_bench.dat' using 1:3 title 'gsll' with lines lc rgb 'green' smooth csplines, '/tmp/gemm_bench.dat' using 1:4 title 'gcc' with lines lc rgb 'blue' smooth csplines"))
+  (gplt:gplt-exec '("plot '/tmp/gemm_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red', '/tmp/gemm_bench.dat' using 1:3 title 'gsll' with lines lc rgb 'green', '/tmp/gemm_bench.dat' using 1:4 title 'gcc' with lines lc rgb 'blue'"))
   (gplt:gplt-display))
 
 (defun plot-gemv-bench-results (bench-results &key max-dim)
