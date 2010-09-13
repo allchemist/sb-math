@@ -3,6 +3,8 @@
 ;;; ==============================================================
 ;;; BLAS 1
 
+;; non-standard names
+
 (defun inner-prod (X Y &key (conjY :noconj))
   (sb-sys:with-pinned-objects (X Y)
     (float-type-choice
@@ -39,21 +41,25 @@
 (defun ammax (X)
   (row-major-aref X (iamax X)))
 
-(defun swap (X Y)
-  (sb-sys:with-pinned-objects (X Y)
-    (assert (= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for swap")
-    (float-choice-funcall (array-element-type X) swap %
-			  (array-total-size X) (array-sap X) 1 (array-sap Y) 1) 
-    Y))
+;; standard names, with wrappers
 
-(defun copy (X &optional Y)
-  (if Y
-      (assert (<= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for copy")
-      (setf Y (make-matrix-like X)))
-  (sb-sys:with-pinned-objects (X Y)
-    (float-choice-funcall (array-element-type X) copy %
-			  (array-total-size X) (array-sap X) 1 (array-sap Y) 1)
-    Y))
+(defun swap (X Y)
+  (declare (type array X Y)
+	   (optimize speed (space 0))
+	   (inline array-element-type array-dimensions))
+  (float-choice-funcall (array-element-type X) swap nil X Y))
+
+ (defun copy (X &optional Y)
+   (declare (type array X)
+	    (optimize speed (space 0))
+	    (inline array-element-type array-dimensions))
+  (let ((type (array-element-type X)))
+    (if Y
+	(assert (<= (the fixnum (array-total-size X))
+		    (the fixnum (array-total-size Y)))
+		nil "Improper dimensions for copy")
+	(setf Y (make-matrix (array-dimensions X) :element-type type)))
+    (float-choice-funcall type copy nil X Y)))
 
 (defun copy-with-offset (X Y offset)
   (declare (sb-ext:muffle-conditions sb-ext:code-deletion-note))
@@ -72,49 +78,39 @@
       Y)))
 
 (defun axpy (X Y alpha)
-  (declare (sb-ext:unmuffle-conditions sb-ext:code-deletion-note))
-  (sb-sys:with-pinned-objects (X Y alpha)
-    (assert (<= (array-total-size X) (array-total-size Y)) nil "Improper dimensions for axpy")
-    (let ((type (array-element-type X)))
-      (float-choice-funcall type axpy %
-			    (array-total-size X) (maybe-complex (coerce alpha type))
-			    (array-sap X) 1 (array-sap Y) 1))
-    Y))
+  (declare (type array X Y)
+	   (optimize speed (space 0))
+	   (inline array-element-type array-dimensions))
+  (float-choice-funcall (array-element-type X) axpy nil X Y alpha))
 
 (defun m+ (m1 m2) (declare (inline axpy)) (axpy m2 m1 1))
 (defun m- (m1 m2) (declare (inline axpy)) (axpy m2 m1 -1))
 
 (defun m*c (X alpha)
-  (sb-sys:with-pinned-objects (X)
-    (let ((type (array-element-type X)))
-      (float-choice-funcall type scal %
-			    (array-total-size X) (maybe-complex (coerce alpha type))
-			    (array-sap X) 1))
-    X))
-
+  (let ((type (array-element-type X)))
+    (float-choice-funcall type scal nil X alpha)))
+  
 ;;; ==============================================================
 ;;; BLAS 2
 
-(defun gemv (A X &key dest (alpha 1) (beta 0) (transA :notrans))
-  (let ((dim0 nil) (dim1 nil))
+(defun gemv (A X &key dest (alpha 1.0) (beta 1.0) (transA :notrans))
+  (declare (optimize speed (space 0)))
+  (let ((type (array-element-type A))
+	(dim0 0) (dim1 0))
+    (declare (type fixnum dim0 dim1))
     (if (eq transA :notrans)
 	(setf dim0 (dim0 A)
 	      dim1 (dim1 A))
 	(setf dim0 (dim1 A)
 	      dim1 (dim0 A)))
     (assert (= dim1 (dim0 X)) nil "Improper dimensions for gemv")
-    (let ((type (array-element-type A)))
-      (if dest
-	  (assert (<= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
-	  (setf dest (make-matrix dim0 :element-type type)))
-      (sb-sys:with-pinned-objects (A X dest alpha beta)
-	(float-choice-funcall type gemv %
-	 'CblasRowMajor transA (dim0 A) (dim1 A) (maybe-complex (coerce alpha type))
-	 (array-sap A) (dim1 A) (array-sap X) 1 (maybe-complex (coerce beta type))
-	 (array-sap dest) 1)
-	dest))))
+    (if dest
+	(assert (<= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
+	(setf dest (make-matrix dim0 :element-type type)))
+    (float-choice-funcall type gemv nil
+      A X dest alpha beta transA)))
 
-(defun ger (X Y &key dest (alpha 1) (conj :noconj))
+(defun ger (X Y &key dest (alpha 1.0) (conj :noconj))
   (let ((type (array-element-type X)))
     (if dest
 	(assert (and (= (dim0 X) (dim0 dest))
@@ -123,8 +119,10 @@
 	(setf dest (make-matrix (list (dim0 X) (dim0 Y)) :element-type type)))
     (sb-sys:with-pinned-objects (dest X Y alpha)
       (float-choice-funcall type ger nil
-			    dest X Y (coerce alpha type) conj)
-      dest)))
+			    dest X Y alpha conj))
+    dest))
+
+;; not optimized
 
 ;; X contents is substituted!
 (defun trmv (A X &key (uplo :upper) (transA :notrans))
@@ -192,54 +190,18 @@
 ;;; ==============================================================
 ;;; BLAS 3
 
-(defun gemm (A B &key dest (alpha 1) (beta 0) (transA :notrans) (transB :notrans))
-  (let (M N K K1 LDA LDB LDC)
-    (cond ((and (eq transA :notrans) (eq transB :notrans))
-	   (setf M (dim0 A)
-		 N (dim1 B)
-		 K (dim1 A)
-		 K1 (dim0 B)
-		 LDA K
-		 LDB N
-		 LDC N))
-	  ((and (not (eq transA :notrans)) (eq transB :notrans))
-	   (setf M (dim1 A)
-		 N (dim1 B)
-		 K (dim0 A)
-		 K1 (dim0 B)
-		 LDA M
-		 LDB N
-		 LDC N))
-	  ((and (eq transA :notrans) (not (eq transB :notrans)))
-	   (setf M (dim0 A)
-		 N (dim0 B)
-		 K (dim1 A)
-		 K1 (dim1 B)
-		 LDA K
-		 LDB K
-		 LDC N))
-	  ((and (not (eq transA :notrans)) (not (eq transB :notrans)))
-	   (setf M (dim1 A)
-		 N (dim0 B)
-		 K (dim0 A)
-		 K1 (dim1 B)
-		 LDA M
-		 LDB K
-		 LDC N)))
-    (assert (= K K1) nil "Improper dimensions for gemm")
-    (let ((type (array-element-type A)))
-      (if dest
-	  (assert (and (= M (dim0 dest))
-		       (= N (dim1 dest)))
-		  nil "Improper dimensions for gemm")
-	  (setf dest (make-matrix (list M N) :element-type type)))
-      (sb-sys:with-pinned-objects (A B dest alpha beta)
-	(float-choice-funcall type gemm %
-	 'CblasRowMajor transA transB
-	 M N K (maybe-complex (coerce alpha type)) (array-sap A) LDA
-	 (array-sap B) LDB (maybe-complex (coerce beta type))
-	 (array-sap dest) LDC)
-	dest))))
+(defun gemm (A B &key dest (alpha 1.0) (beta 0.0) (transa :notrans) (transB :notrans))
+  (declare (optimize speed (space 0)))
+  (let ((type (array-element-type A))
+	(M (the fixnum (if (eq transA :notrans) (dim0 A) (dim1 A))))
+	(N (the fixnum (if (eq transB :notrans) (dim1 B) (dim0 B)))))
+    (if dest
+	(assert (and (= M (the fixnum (dim0 dest)))
+		     (= N (the fixnum (dim1 dest))))
+		nil "Improper dimensions for gemm")
+	(setf dest (make-matrix `(,M ,N) :element-type type)))
+    (float-choice-funcall type gemm nil
+      A B dest alpha beta transa transb)))
 
 ;;; ==============================================================
 ;;; BLAS 2 packed

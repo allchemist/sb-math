@@ -1,6 +1,6 @@
 (in-package :sb-math)
 
-(declaim (inline array-sap maybe-complex float-sizeof))
+(declaim (inline array-sap maybe-complex complex-sap float-sizeof))
 
 ;; type defining
 
@@ -33,22 +33,37 @@
     (,(intern (string-upcase (concat-as-strings prefix 'z func)))
       ,@args)))
 
+(declaim (ftype (function (t) integer) float-sizeof))
 (defun float-sizeof (type)
-  (cond ((eq type 'single-float) 4)
-	((eq type 'double-float) 8)
-	((equal type '(complex single-float)) 8)
-	((equal type '(complex double-float)) 16)
-	(t (error "Not a float type: ~A" type))))
+  (the integer
+    (cond ((eq type 'single-float) 4)
+	  ((eq type 'double-float) 8)
+	  ((equal type '(complex single-float)) 8)
+	  ((equal type '(complex double-float)) 16)
+	  (t (error "Not a float type: ~A" type)))))
 
 ;; pointer access
 
+(declaim (ftype (function (array) system-area-pointer) array-sap))
 (defun array-sap (array)
+  (declare (type array array)
+	   (optimize speed (space 0))
+	   (sb-ext:muffle-conditions sb-ext:compiler-note))
   (if (not (array-displacement array))
-      (sb-sys:vector-sap (sb-ext:array-storage-vector array))
+      (the system-area-pointer
+	(sb-sys:vector-sap
+	 (the simple-array
+	   (sb-ext:array-storage-vector array))))
       (multiple-value-bind (displacement offset)
 	  (array-displacement array)
-	(sb-sys:sap+ (sb-sys:vector-sap (sb-ext:array-storage-vector displacement))
-		     (* offset (float-sizeof (array-element-type array)))))))
+	(the system-area-pointer
+	  (sb-sys:sap+ (the system-area-pointer
+			 (sb-sys:vector-sap
+			  (the simple-array
+			    (sb-ext:array-storage-vector (the simple-array displacement)))))
+		       (the integer
+			 (* (the integer offset)
+			    (the integer (float-sizeof (array-element-type array))))))))))
 
 (defun pmatrix-sap (pmatrix)
   (declare (inline pmatrix-storage-vector))

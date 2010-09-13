@@ -9,8 +9,16 @@
   '(and array
         (satisfies rank2-array-p)))
 
-(defun dim0 (array) (array-dimension array 0))
-(defun dim1 (array) (array-dimension array 1))
+(declaim (ftype (function (array) fixnum) dim0 dim1))
+(declaim (inline dim0 dim1))
+(defun dim0 (array)
+  (declare (optimize speed)
+	   (sb-ext:muffle-conditions sb-ext:compiler-note))
+  (the fixnum (array-dimension array 0)))
+(defun dim1 (array) 
+  (declare (optimize speed)
+	   (sb-ext:muffle-conditions sb-ext:compiler-note))
+  (array-dimension array 1))
 
 (defun make-matrix (dimensions &rest keys &key (element-type *default-type*) &allow-other-keys)
   (apply #'make-array dimensions :element-type element-type keys))

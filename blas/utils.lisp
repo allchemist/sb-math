@@ -13,3 +13,48 @@
 
 (defmacro define-blas-routine (name result &rest args)
   `(%define-foreign-routine ,name ,result ,#'cblas-alien-name ,args))
+
+(defmacro define-blas-wrapper (name &key arrays floats rest lets pre alien-args)
+  (flet ((parse-alien-arg (arg type)
+	   (cond ((member arg arrays)
+		  `(array-sap ,arg))
+		 ((member arg floats)
+		  (cond ((subtypep type 'real) `(coerce ,arg ',type))
+			((subtypep type 'complex) `(complex-sap (coerce ,arg ',type)))))
+		 ((member arg rest) arg)
+		 (t arg))))
+    (let ((defs nil))
+      (dolist (type '((s single-float)
+		      (d double-float)
+		      (c (complex single-float))
+		      (z (complex double-float))))
+	(let ((typed-name (intern (string-upcase (concat-as-strings (first type) name)) :sb-math))
+	      (alien-name (intern (string-upcase (concat-as-strings '% (first type) name)) :sb-math))
+	      (array-type `(simple-array ,(second type))))
+	  (push
+	   `(declaim (ftype (function
+			     (,@(make-list (length arrays) :initial-element array-type)
+			      ,@(make-list (length floats) :initial-element (second type))
+			      ,@(make-list (length rest) :initial-element t))
+			     ,array-type)
+			    ,typed-name))
+	   defs)
+	  (push `(declaim (inline ,typed-name)) defs)
+	  (push 
+	   `(defun ,typed-name (,@arrays ,@floats ,@rest)
+	      (declare (type ,array-type ,@arrays)
+		       (inline dim0 dim1)
+		       (optimize speed (safety 0) (space 0))
+		       (sb-ext:muffle-conditions sb-ext:compiler-note))
+	      (let ,lets
+		,@pre
+		(sb-sys:with-pinned-objects (,@(if (subtypep (second type) 'complex)
+						   (append arrays floats)
+						   arrays))
+		  (,alien-name
+		   ,@(mapcar #'(lambda (arg)
+				 (parse-alien-arg arg (second type)))
+			     alien-args)))
+		,(car (last arrays))))
+	   defs)))
+      `(progn ,@(nreverse defs)))))

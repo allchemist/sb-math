@@ -1,18 +1,42 @@
 (in-package :sb-math)
 
+(defmacro get-run-time (op)
+  `(let ((start (get-internal-run-time)))
+     ,op
+     (/ (- (get-internal-run-time) start)
+	1000.0)))
+
 (defun gemm-bench-sbmath (m n k iter)
-  (let ((A (make-random-matrix `(,m ,k)))
-	(B (make-random-matrix `(,k ,n)))
-	(C (make-matrix `(,m ,n))))
-    (dotimes (i iter)
-      (gemm A B :dest C))))
+  (get-run-time
+   (let ((A (make-random-matrix `(,m ,k)))
+	 (B (make-random-matrix `(,k ,n)))
+	 (C (make-matrix `(,m ,n))))
+     (dotimes (i iter)
+       (gemm A B :dest C)))))
 
 (defun gemv-bench-sbmath (m n iter)
-  (let ((A (make-random-matrix `(,m ,n)))
-	(X (make-random-matrix n))
-	(Y (make-matrix m)))
-    (dotimes (i iter)
-      (gemv A X :dest Y))))
+  (get-run-time
+   (let ((A (make-random-matrix `(,m ,n)))
+	 (X (make-random-matrix n))
+	 (Y (make-matrix m)))
+     (dotimes (i iter)
+       (gemv A X :dest Y)))))
+
+(defun sgemm-bench-sbmath (m n k iter)
+  (get-run-time
+   (let ((A (make-random-matrix `(,m ,k)))
+	 (B (make-random-matrix `(,k ,n)))
+	 (C (make-matrix `(,m ,n))))
+     (dotimes (i iter)
+       (sgemm A B C 1.0 0.0 :notrans :notrans)))))
+
+(defun sgemv-bench-sbmath (m n iter)
+  (get-run-time
+   (let ((A (make-random-matrix `(,m ,n)))
+	 (X (make-random-matrix n))
+	 (Y (make-matrix m)))
+     (dotimes (i iter)
+       (sgemv A X Y 1.0 0.0 :notrans)))))
 
 (defun gemm-bench-gcc (m n k iter)
   (read
@@ -45,25 +69,22 @@
       (setf (grid:gref vector i) (random 1.0)))
     vector))
 
+
 (defun gemm-bench-gsll (m n k iter)
-  (let ((A (make-random-foreign-matrix `(,m ,k)))
-	(B (make-random-foreign-matrix `(,k ,n)))
-	(C (make-random-foreign-matrix `(,m ,n))))
-    (dotimes (i iter)
-      (gsll:matrix-product A B C))))
+  (get-run-time
+   (let ((A (make-random-foreign-matrix `(,m ,k)))
+	 (B (make-random-foreign-matrix `(,k ,n)))
+	 (C (make-random-foreign-matrix `(,m ,n))))
+     (dotimes (i iter)
+       (gsll:matrix-product A B C)))))
 
 (defun gemv-bench-gsll (m n iter)
-  (let ((A (make-random-foreign-matrix `(,m ,n)))
-	(X (make-random-foreign-vector n))
-	(Y (make-random-foreign-vector m)))
-    (dotimes (i iter)
-      (gsll:matrix-product A X Y))))
-
-(defmacro get-run-time (op)
-  `(let ((start (get-internal-run-time)))
-     ,op
-     (/ (- (get-internal-run-time) start)
-	1000.0)))
+  (get-run-time
+   (let ((A (make-random-foreign-matrix `(,m ,n)))
+	 (X (make-random-foreign-vector n))
+	 (Y (make-random-foreign-vector m)))
+     (dotimes (i iter)
+       (gsll:matrix-product A X Y)))))
 
 (defparameter *gemm-bench-params*
   '((3 3 3 1000000)
@@ -80,8 +101,8 @@
     (50 50 50 10000)
     (100 100 100 1000)
     (200 200 200 100)
-    (300 300 300 10)
-    (400 400 400 10)
+    (300 300 300 100)
+    (400 400 400 100)
     (500 500 500 10)))
 
 (defparameter *gemv-bench-params*
@@ -109,7 +130,8 @@
       (push
        (print (list
 	       p
-	       (list 'sbmath (get-run-time (apply #'gemm-bench-sbmath p)))
+	       (list 'sbmath (apply #'gemm-bench-sbmath p))
+	       (list 'sbmath-typed (apply #'sgemm-bench-sbmath p))
 	       (list 'gsll (get-run-time (apply #'gemm-bench-gsll p)))
 	       (list 'gcc (apply #'gemm-bench-gcc p))))
        results))
@@ -121,7 +143,8 @@
       (push
        (print (list
 	       p
-	       (list 'sbmath (get-run-time (apply #'gemv-bench-sbmath p)))
+	       (list 'sbmath (apply #'gemv-bench-sbmath p))
+	       (list 'sbmath-typed (apply #'sgemv-bench-sbmath p))
 	       (list 'gsll (get-run-time (apply #'gemv-bench-gsll p)))
 	       (list 'gcc (apply #'gemv-bench-gcc p))))
        results))
@@ -138,13 +161,15 @@
       (when (and max-dim
 		 (> (first (first r)) max-dim))
 	(return))
-      (format s "~A ~A ~A ~A~%"
+      (format s "~A ~A ~A ~A ~A~%"
 	      (first (first r))
 	      (float (/ (second (second r))
 			(fourth (first r))))
 	      (float (/ (second (third r))
 			(fourth (first r))))
 	      (float (/ (second (fourth r))
+			(fourth (first r))))
+	      (float (/ (second (fifth r))
 			(fourth (first r)))))))
 
   (gplt:gplt-restart)
@@ -163,10 +188,10 @@
 	     (set ylabel " \"time (sec/call)\""))))
   (gplt:gplt-exec '(set term png))
   (gplt:gplt-exec '(set out "'/tmp/gemm_bench.png'"))
-  (gplt:gplt-exec '("plot '/tmp/gemm_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red', '/tmp/gemm_bench.dat' using 1:3 title 'gsll' with lines lc rgb 'green', '/tmp/gemm_bench.dat' using 1:4 title 'gcc' with lines lc rgb 'blue'"))
+  (gplt:gplt-exec '("plot '/tmp/gemm_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red', '/tmp/gemm_bench.dat' using 1:3 title 'typed sb-math' with lines lc rgb 'black', '/tmp/gemm_bench.dat' using 1:4 title 'gsll' with lines lc rgb 'green', '/tmp/gemm_bench.dat' using 1:5 title 'gcc' with lines lc rgb 'blue'"))
   (gplt:gplt-display))
 
-(defun plot-gemv-bench-results (bench-results &key max-dim)
+(defun plot-gemv-bench-results (bench-results &key min-dim max-dim)
   (with-open-file (s "/tmp/gemv_bench.dat"
 		     :direction :output
 		     :if-exists :supersede
@@ -175,14 +200,18 @@
       (when (and max-dim
 		 (> (first (first r)) max-dim))
 	(return))
-      (format s "~A ~A ~A ~A~%"
-	      (first (first r))
-	      (float (/ (second (second r))
-			(third (first r))))
-	      (float (/ (second (third r))
-			(third (first r))))
-	      (float (/ (second (fourth r))
-			(third (first r)))))))
+      (when (or (not min-dim)
+		(> (first (first r)) min-dim))
+	(format s "~A ~A ~A ~A ~A~%"
+		(first (first r))
+		(float (/ (second (second r))
+			  (third (first r))))
+		(float (/ (second (third r))
+			  (third (first r))))
+		(float (/ (second (fourth r))
+			  (third (first r))))
+		(float (/ (second (fifth r))
+			  (third (first r))))))))
 
   (gplt:gplt-restart)
   (if max-dim
@@ -200,5 +229,5 @@
 	     (set ylabel " \"time (sec/call)\""))))
   (gplt:gplt-exec '(set term png))
   (gplt:gplt-exec '(set out "'/tmp/gemv_bench.png'"))
-  (gplt:gplt-exec '("plot '/tmp/gemv_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red' smooth csplines, '/tmp/gemv_bench.dat' using 1:3 title 'gsll' with lines lc rgb 'green' smooth csplines, '/tmp/gemv_bench.dat' using 1:4 title 'gcc' with lines lc rgb 'blue' smooth csplines"))
+  (gplt:gplt-exec '("plot '/tmp/gemv_bench.dat' using 1:2 title 'sb-math' with lines lc rgb 'red', '/tmp/gemv_bench.dat' using 1:3 title 'typed sb-math' with lines lc rgb 'black', '/tmp/gemv_bench.dat' using 1:4 title 'gsll' with lines lc rgb 'green', '/tmp/gemv_bench.dat' using 1:5 title 'gcc' with lines lc rgb 'blue'"))
   (gplt:gplt-display))
