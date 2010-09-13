@@ -83,8 +83,8 @@
 	   (inline array-element-type array-dimensions))
   (float-choice-funcall (array-element-type X) axpy nil X Y alpha))
 
-(defun m+ (m1 m2) (declare (inline axpy)) (axpy m2 m1 1))
-(defun m- (m1 m2) (declare (inline axpy)) (axpy m2 m1 -1))
+(defun m+ (m1 m2) (declare (inline axpy)) (axpy m2 m1 1.0))
+(defun m- (m1 m2) (declare (inline axpy)) (axpy m2 m1 -1.0))
 
 (defun m*c (X alpha)
   (let ((type (array-element-type X)))
