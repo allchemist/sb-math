@@ -1,76 +1,70 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
-;; general matrices
-
-(defun rank2-array-p (matrix)
-  (= (array-rank matrix) 2))
-
-(deftype general-matrix ()
-  '(and array
-        (satisfies rank2-array-p)))
+;; get matrix dimensions
 
 (declaim (ftype (function (array) fixnum) dim0 dim1))
 (declaim (inline dim0 dim1))
+
 (defun dim0 (array)
   (declare (optimize speed)
 	   (sb-ext:muffle-conditions sb-ext:compiler-note))
   (the fixnum (array-dimension array 0)))
+
 (defun dim1 (array) 
   (declare (optimize speed)
 	   (sb-ext:muffle-conditions sb-ext:compiler-note))
-  (array-dimension array 1))
+  (the fixnum (array-dimension array 1)))
 
-(defun make-matrix (dimensions &rest keys &key (element-type *default-type*) &allow-other-keys)
-  (apply #'make-array dimensions :element-type element-type keys))
+;; matrix creating
 
-(defun make-matrix-like (matrix)
-  (make-array (array-dimensions matrix) :element-type (array-element-type matrix)))
+(defmacro make-matrix (dimensions &rest keys &key &allow-other-keys)
+  `(make-array ,dimensions
+	       :element-type ,(if (member :element-type keys)
+				  (second keys)
+				  '*default-type*)
+	       ,@(cddr keys)))
 
-;; general matrix iteration
+(defmacro make-matrix-like (matrix)
+  `(make-array (array-dimensions ,matrix) :element-type (array-element-type ,matrix)))
 
-(defmacro do-matrix ((matrix &rest subscripts) &body body)
-  (let ((i (or (first subscripts) (gensym)))
-	(j (or (second subscripts) (gensym))))
-    `(dotimes (,i (dim0 ,matrix))
-       (declare (type fixnum i))
-       ,(if (second subscripts)
-	    `(dotimes (,j (dim1 ,matrix))
-	       (declare (type fixnum j))
-	       ,@body)
-	    `(progn
-	       ,@body)))))
+(defmacro make-random-matrix (dimensions &key
+			      (element-type *default-type*)
+			      (rng 'simple-rng))
+  `(map-matrix (make-matrix ,dimensions :element-type ',element-type) ',rng))
 
-(defun row-bind (matrix row)
-   (make-array (dim1 matrix)
-	      :element-type (array-element-type matrix)
-	      :displaced-to matrix
-	      :displaced-index-offset (* (dim1 matrix) row)))
+;; matrix iteration
 
-(defmacro do-rows ((matrix row) &body body)
-  (let ((i (gensym)))
-    `(dotimes (,i (dim0 ,matrix))
-       (let ((,row (row-bind ,matrix ,i)))
-	 ,@body))))
-
-;; general mapping
-
-(defun map-matrix (matrix func)
-  (dotimes (i (array-total-size matrix))
-    (setf (row-major-aref matrix i)
-	  (funcall func (row-major-aref matrix i))))
-  matrix)
-
-(defun map-two-matrices (m1 m2 func)
-  (assert (= (array-total-size m1) (array-total-size m2)) nil "Matrix sizes not equal")
-  (dotimes (i (array-total-size m1))
-    (setf (row-major-aref m1 i)
-	  (funcall func (row-major-aref m1 i) (row-major-aref m2 i))))
-  m1)
-
-(defun make-random-matrix (dimensions &key
-			   (element-type *default-type*)
-			   (rng #'simple-rng))
-  (map-matrix (make-matrix dimensions :element-type element-type) rng))
+(macrolet
+    ((make-matrix-iterator ()
+       (let ((defs nil))
+	 (dolist (type '((s single-float)
+			 (d double-float)
+			 (c (complex single-float))
+			 (z (complex double-float))))
+	   (push
+	    `(defmacro ,(intern (string-upcase (concat-as-strings (first type) 'do-matrix)) :sb-math2)
+		 ((matrix &rest subscripts) &body body)
+	       (let ((i (first subscripts))
+		     (j (or (second subscripts) (gensym))))
+		 `(dotimes (,i (the fixnum (dim0 ,matrix))
+			    (the (simple-array ,',(second type)) ,matrix))
+		    (declare (type (simple-array ,',(second type)) ,matrix)
+			     (type fixnum i)
+			     (optimize speed))
+		    ,(if (second subscripts)
+			 `(dotimes (,j (dim1 ,matrix))
+			    (declare (type fixnum ,j))
+			    ,@body)
+			 `(progn
+			    ,@body)))))
+	    defs))
+	 (push 
+	  `(defmacro do-matrix ((matrix &rest subscripts) &body body)
+	     `(float-choice-funcall (array-element-type ,matrix) do-matrix nil
+				    (,matrix ,@subscripts) ,@body))
+	  defs)
+	 `(progn ,@(nreverse defs)))))
+  (make-matrix-iterator))
 
 ;; printing matrices
 

@@ -1,8 +1,8 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (defparameter *libs* nil)
 (defparameter *root-path*
-  (let ((path (namestring (asdf:component-relative-pathname (asdf:find-system :sb-math)))))
+  (let ((path (namestring (asdf:component-relative-pathname (asdf:find-system :sb-math2)))))
     (if (search ".asd" path)
 	(subseq path 0 (1+ (position #\/ path :from-end t)))
 	path)))
@@ -23,7 +23,7 @@
 (defun load-foreign-library (name)
   (map nil #'load-shared-object (second (assoc name *libs*))))
 
-
+#|
 (defun compile-c-source ()
   (when (not (probe-file (concatenate 'string *root-path* "lib/libsbmath.so")))
     (format *query-io* "; Compiling C source~%")
@@ -38,6 +38,7 @@
 (compile-c-source)
 
 (define-foreign-library :alien-matrix "lib/libsbmath.so")
+|#
 
 ;; if using GSL CBLAS
 

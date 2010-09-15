@@ -1,57 +1,100 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
-(defparameter *default-type* 'single-float)
+(declaim (inline imin imax iamin iamax))
 
-(defun in-type (num) (coerce num *default-type*))
-(defun square (x) (* x x))
-(defun random-value (max-value)
-  (- max-value (random (* max-value 2))))
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+;; shut up compiler comments "can't tell the rank at compile time"
 
+(define-with-types imin (:matrix-args matrix :return-type fixnum :only-real t)
+  (let ((min-val (the float-type (row-major-aref matrix 0)))
+	(min-pos (the fixnum 0)))
+    (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
+      (let ((cur-val (the float-type (row-major-aref matrix i))))
+	(when (< cur-val min-val)
+	  (setf min-val cur-val
+		min-pos i))))))
 
-(defun concat-as-strings (&rest args)
-  (apply #'concatenate 'string (mapcar #'string (remove nil args))))
+(define-with-types imax (:matrix-args matrix :return-type fixnum :only-real t)
+  (let ((min-val (the float-type (row-major-aref matrix 0)))
+	(min-pos (the fixnum 0)))
+    (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
+      (let ((cur-val (the float-type (row-major-aref matrix i))))
+	(when (> cur-val min-val)
+	  (setf min-val cur-val
+		min-pos i))))))
 
+(defun imin (matrix)
+  (declare (type simple-array matrix)
+	   (optimize speed))
+  (let ((element-type (array-element-type matrix)))
+    (assert (not (subtypep element-type 'complex)) nil "This function is not applicable for complex data")
+    (ecase element-type
+      (single-float (simin matrix))
+      (double-float (dimin matrix)))))
+			  
+(defun imax (matrix)
+  (declare (type simple-array matrix)
+	   (optimize speed))
+  (let ((element-type (array-element-type matrix)))
+    (assert (not (subtypep element-type 'complex)) nil "This function is not applicable for complex data")
+    (ecase element-type
+	(single-float (simax matrix))
+	(double-float (dimax matrix)))))
 
-;; factorial
+(defun mmin (matrix) (row-major-aref matrix (imin matrix)))
+(defun mmax (matrix) (row-major-aref matrix (imax matrix)))
 
-(declaim (ftype (function (fixnum fixnum) fixnum) %!))
-(defun %! (n acc)
-  (declare (type fixnum n acc)
-	   (optimize speed (safety 0)))
-  (if (<= n 1)
-      acc
-      (%! (- n 1) (* acc n))))
-(declaim (ftype (function (fixnum) fixnum) !))
-(defun ! (n) (%! n 1))
+(define-with-types iamin (:matrix-args matrix :return-type fixnum)
+  (let ((min-val (abs (the float-type (row-major-aref matrix 0))))
+	(min-pos (the fixnum 0)))
+    (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
+      (let ((cur-val (abs (the float-type (row-major-aref matrix i)))))
+	(when (< cur-val min-val)
+	  (setf min-val cur-val
+		min-pos i))))))
 
-;; simple random generators
+(define-with-types iamax (:matrix-args matrix :return-type fixnum)
+  (let ((min-val (abs (the float-type (row-major-aref matrix 0))))
+	(min-pos (the fixnum 0)))
+    (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
+      (let ((cur-val (abs (the float-type (row-major-aref matrix i)))))
+	(when (> cur-val min-val)
+	  (setf min-val cur-val
+		min-pos i))))))
 
-(defun simple-rng (x)
-  (etypecase x
-    ((complex single-float) (complex (random 1.0) (random 1.0)))
-    ((complex double-float) (complex (random 1d0) (random 1d0)))
-    ((complex number) (complex (random 10) (random 10)))
-    (single-float (random 1.0))
-    (double-float (random 1d0))
-    (number (random 10))))
+(defun iamin (matrix)
+  (declare (type simple-array matrix)
+	   (optimize speed))
+  (float-choice-funcall (array-element-type matrix) iamin nil matrix))
 
-(defun plain-rng (left right &key (element-type *default-type*))
-  (flet ((mod-fn (x) (+ (* x (- right left)) left)))
-    (cond ((eq element-type 'single-float) (mod-fn (random 1.0)))
-	  ((eq element-type 'double-float) (mod-fn (random 1d0)))
-	  ((equal element-type '(complex single-float))
-	   (complex (mod-fn (random 1.0)) (mod-fn (random 1.0))))
-	  ((equal element-type '(complex double-float))
-	   (complex (mod-fn (random 1d0)) (mod-fn (random 1d0))))
-	  (t (error "element-type is not float")))))
+(defun iamax (matrix)
+  (declare (type simple-array matrix)
+	   (optimize speed))
+  (float-choice-funcall (array-element-type matrix) iamax nil matrix))
+			  
+(defun ammin (matrix) (row-major-aref matrix (iamin matrix)))
+(defun ammax (matrix) (row-major-aref matrix (iamax matrix)))
 
-;; approx equality
-						      
-(defgeneric ~= (X Y eps))
+(define-with-types msum (:matrix-args matrix :return-type t)
+  (let ((sum (the float-type (coerce 0.0 'float-type))))
+    (dotimes (i (the fixnum (array-total-size matrix)))
+      (incf sum (row-major-aref matrix i)))
+    (the float-type sum)))
 
-(defmethod ~= ((X real) (Y real) eps)
-  (< (abs (- X Y)) eps))
+(defun msum (matrix)
+  (declare (type simple-array matrix)
+	   (optimize speed))
+  (float-choice-funcall (array-element-type matrix) msum nil matrix))
 
-(defmethod ~= ((X complex) (Y complex) eps)
-  (and (< (abs (- (realpart X) (realpart Y))) eps)
-       (< (abs (- (imagpart X) (imagpart Y))) eps)))
+(define-with-types amsum (:matrix-args matrix :return-type t)
+  (let ((sum 0))
+    (dotimes (i (the fixnum (array-total-size matrix)))
+      (incf sum (abs (row-major-aref matrix i))))
+    sum))
+
+(defun amsum (matrix)
+  (declare (type simple-array matrix)
+	   (optimize speed))
+  (float-choice-funcall (array-element-type matrix) amsum nil matrix))
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))

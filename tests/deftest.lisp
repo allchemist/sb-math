@@ -2,7 +2,7 @@
 ;    (:use :common-lisp :sb-math)
 ;  (:export :run-tests :run-all-tests))
 
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (export '(run-tests run-all-tests))
 
@@ -49,5 +49,6 @@
     (format *query-io* "; ~A units asserted~%" (length *asserted*))
     (format *query-io* "; These units asserted: ~A~%" (or *asserted* "none"))))
 
-(defun run-all-tests ()
-  (run-tests :alien-matrix :blas :lapack))
+#|(defun run-all-tests ()
+  (run-tests :base :blas :lapack))
+|#

@@ -1,4 +1,4 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (defun lapack-char-code (char)
   (char-code
@@ -41,7 +41,7 @@
 (defmacro define-lapack-routine (name result args)
   (let ((defs nil))
     (dolist (type '(s d c z))
-      (let ((fullname (intern (concat-as-strings '% type name) :sb-math))
+      (let ((fullname (intern (concat-as-strings '% type name) :sb-math2))
 	    (alien-name (concat-as-strings type name '_)))
 	(push `(define-alien-routine (,(string-downcase alien-name) ,fullname) ,result
 		 ,@(let ((arglst nil))
@@ -61,8 +61,8 @@
   (let ((ext-args (append rest-args array-args))
 	(defs nil))
     (dolist (type '(s d c z))
-      (let ((alien-name (intern (concat-as-strings '% type name) :sb-math))
-	    (fullname (intern (concat-as-strings type name) :sb-math)))
+      (let ((alien-name (intern (concat-as-strings '% type name) :sb-math2))
+	    (fullname (intern (concat-as-strings type name) :sb-math2)))
 	(push `(defun ,fullname
 		   ,(remove nil
 		     (mapcar #'(lambda (arg)
@@ -104,35 +104,3 @@
 		     ,return)))
 	      defs)))
     `(progn ,@(nreverse defs))))
-
-#|
-(defun read-defs (file)
-  (with-open-file (s file)
-    (let ((defs nil))
-      (loop
-	(let ((def (read s nil)))
-	  (if (null def)
-	      (return)
-	      (push def defs))))
-      (nreverse defs))))
-
-(defun write-alien-defs ()
-  (with-open-file (s "general/lapack/aliens.lisp"
-		     :direction :output
-		     :if-exists :append
-		     :if-does-not-exist :create)
-    (map nil #'(lambda (def)
-		 (format s "~%~%;; ~A" (second def)) 
-		 (print (macroexpand-1 def) s))
-	 (read-defs "general/lapack/alien-defs.lisp"))))
-
-(defun write-lowlevel-defs ()
-  (with-open-file (s "general/lapack/lowlevel.lisp"
-		     :direction :output
-		     :if-exists :append
-		     :if-does-not-exist :create)
-    (map nil #'(lambda (def)
-		 (format s "~%~%;; ~A" (second def)) 
-		 (print (macroexpand-1 def) s))
-	 (read-defs "general/lapack/lowlevel-defs.lisp"))))
-|#

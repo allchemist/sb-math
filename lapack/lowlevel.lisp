@@ -1,4 +1,4 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (declaim (inline sgetrf dgetrf cgetrf zgetrf
 		 sgetri dgetri cgetri zgetri

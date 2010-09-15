@@ -1,4 +1,4 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (declaim (inline
 	   ;; blas 1

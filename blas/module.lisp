@@ -1,4 +1,4 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (load-foreign-library :blas)
 

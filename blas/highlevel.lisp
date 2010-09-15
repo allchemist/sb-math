@@ -1,45 +1,7 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 ;;; ==============================================================
 ;;; BLAS 1
-
-;; non-standard names
-
-(defun inner-prod (X Y &key (conjY :noconj))
-  (sb-sys:with-pinned-objects (X Y)
-    (float-type-choice
-     (array-element-type X) (sdot X Y) (ddot X Y)
-     (ecase conjY (:conj (cdotc X Y)) (:noconj (cdotu X Y)))
-     (ecase conjY (:conj (zdotc X Y)) (:noconj (zdotu X Y))))))
-
-(defun e-norm (X)
-  (sb-sys:with-pinned-objects (X)
-    (float-type-choice
-     (array-element-type X)
-     (%snrm2 (array-total-size X) (array-sap X) 1)
-     (%dnrm2 (array-total-size X) (array-sap X) 1)
-     (%scnrm2 (array-total-size X) (array-sap X) 1)
-     (%dznrm2 (array-total-size X) (array-sap X) 1))))
-
-(defun normalize (X)
-  (m*c X (/ (e-norm X))))
-
-(defun amsum (X)
-  (sb-sys:with-pinned-objects (X)
-    (float-type-choice
-     (array-element-type X)
-     (%sasum (array-total-size X) (array-sap X) 1)
-     (%dasum (array-total-size X) (array-sap X) 1)
-     (%scasum (array-total-size X) (array-sap X) 1)
-     (%dzasum (array-total-size X) (array-sap X) 1))))
-
-(defun iamax (X)
-  (sb-sys:with-pinned-objects (X)
-    (float-choice-funcall (array-element-type X) amax %i
-			  (array-total-size X) (array-sap X) 1)))
-
-(defun ammax (X)
-  (row-major-aref X (iamax X)))
 
 ;; standard names, with wrappers
 
@@ -62,39 +24,72 @@
     (float-choice-funcall type copy nil X Y)))
 
 (defun copy-with-offset (X Y offset)
-  (declare (sb-ext:muffle-conditions sb-ext:code-deletion-note))
+  (declare ;(sb-ext:muffle-conditions sb-ext:code-deletion-note)
   ;; ignore notes about deleting unreachable code
   ;; its OK, and also very good
-  (assert (<= (array-total-size X) (- (array-total-size Y) offset)) nil
-	  "Improper dimensions for copy-with-offset")
+	   (type simple-array X Y)
+	   (type fixnum offset)
+	   (optimize speed))
+  (assert (<= (the fixnum (array-total-size X))
+	      (the fixnum (- (the fixnum (array-total-size Y)) offset)))
+	  nil "Improper dimensions for copy-with-offset")
   (sb-sys:with-pinned-objects (X Y)
     (let ((type (array-element-type X)))
        (float-choice-funcall type copy %
-			     (array-total-size X) (array-sap X) 1
-			     (sb-sys:sap+ (array-sap Y)
-					  (* offset
-					     (float-sizeof type)))
+			     (the fixnum (array-total-size X)) (array-sap X) 1
+			     (the system-area-pointer
+			       (sb-sys:sap+ (array-sap Y)
+					    (the integer
+					      (* offset
+						 (float-sizeof type)))))
 			     1)
       Y)))
 
 (defun axpy (X Y alpha)
-  (declare (type array X Y)
-	   (optimize speed (space 0))
-	   (inline array-element-type array-dimensions))
+  (declare (type simple-array X Y)
+	   (optimize speed))
   (float-choice-funcall (array-element-type X) axpy nil X Y alpha))
 
-(defun m+ (m1 m2) (declare (inline axpy)) (axpy m2 m1 1.0))
-(defun m- (m1 m2) (declare (inline axpy)) (axpy m2 m1 -1.0))
+(defun m+ (m1 m2) (axpy m2 m1 1.0))
+(defun m- (m1 m2) (axpy m2 m1 -1.0))
 
 (defun m*c (X alpha)
+  (declare (optimize speed)
+	   (type simple-array X))
   (let ((type (array-element-type X)))
     (float-choice-funcall type scal nil X alpha)))
+
+;; non-standard names
+
+(defun inner-prod (X Y &key (conjY :noconj))
+  (declare (type simple-array X Y)
+	   (optimize speed))
+  (sb-sys:with-pinned-objects (X Y)
+    (float-type-choice
+     (array-element-type X) (sdot X Y) (ddot X Y)
+     (ecase conjY (:conj (cdotc X Y)) (:noconj (cdotu X Y)))
+     (ecase conjY (:conj (zdotc X Y)) (:noconj (zdotu X Y))))))
+
+(defun e-norm (X)
+  (declare (optimize speed)
+	   (type simple-array X))
+  (sb-sys:with-pinned-objects (X)
+    (float-type-choice
+     (array-element-type X)
+     (the single-float (%snrm2 (the fixnum (array-total-size X)) (array-sap X) 1))
+     (the double-float (%dnrm2 (the fixnum (array-total-size X)) (array-sap X) 1))
+     (the single-float (%scnrm2 (the fixnum (array-total-size X)) (array-sap X) 1))
+     (the double-float (%dznrm2 (the fixnum (array-total-size X)) (array-sap X) 1)))))
+
+(defun normalize (X)
+  (m*c X (/ (e-norm X))))
   
 ;;; ==============================================================
 ;;; BLAS 2
 
 (defun gemv (A X &key dest (alpha 1.0) (beta 1.0) (transA :notrans))
-  (declare (optimize speed (space 0)))
+  (declare (optimize speed)
+	   (type simple-array A X))
   (let ((type (array-element-type A))
 	(dim0 0) (dim1 0))
     (declare (type fixnum dim0 dim1))
@@ -106,23 +101,24 @@
     (assert (= dim1 (dim0 X)) nil "Improper dimensions for gemv")
     (if dest
 	(assert (<= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
-	(setf dest (make-matrix dim0 :element-type type)))
+	(setf dest (the simple-array (make-matrix dim0 :element-type type))))
     (float-choice-funcall type gemv nil
-      A X dest alpha beta transA)))
+      A X (the simple-array dest) alpha beta transA)))
 
 (defun ger (X Y &key dest (alpha 1.0) (conj :noconj))
+  (declare (type simple-array X Y)
+	   (optimize speed))
   (let ((type (array-element-type X)))
     (if dest
 	(assert (and (= (dim0 X) (dim0 dest))
 		     (= (dim0 Y) (dim1 dest)))
 		nil "Improper dimensions for ger")
-	(setf dest (make-matrix (list (dim0 X) (dim0 Y)) :element-type type)))
+	(setf dest (the simple-array (make-matrix (list (dim0 X) (dim0 Y)) :element-type type))))
     (sb-sys:with-pinned-objects (dest X Y alpha)
       (float-choice-funcall type ger nil
-			    dest X Y alpha conj))
-    dest))
+        (the simple-array dest) X Y alpha conj))))
 
-;; not optimized
+;; not optimized, but waiting for their hour
 
 ;; X contents is substituted!
 (defun trmv (A X &key (uplo :upper) (transA :notrans))
@@ -191,17 +187,21 @@
 ;;; BLAS 3
 
 (defun gemm (A B &key dest (alpha 1.0) (beta 0.0) (transa :notrans) (transB :notrans))
-  (declare (optimize speed (space 0)))
+  (declare (optimize speed)
+	   (type simple-array A B))
   (let ((type (array-element-type A))
 	(M (the fixnum (if (eq transA :notrans) (dim0 A) (dim1 A))))
 	(N (the fixnum (if (eq transB :notrans) (dim1 B) (dim0 B)))))
     (if dest
-	(assert (and (= M (the fixnum (dim0 dest)))
-		     (= N (the fixnum (dim1 dest))))
+	(assert (and (= M (dim0 dest))
+		     (= N (dim1 dest)))
 		nil "Improper dimensions for gemm")
-	(setf dest (make-matrix `(,M ,N) :element-type type)))
+	(setf dest (the simple-array (make-matrix `(,M ,N) :element-type type))))
     (float-choice-funcall type gemm nil
-      A B dest alpha beta transa transb)))
+      A B (the simple-array dest) alpha beta transa transb)))
+
+#|
+;;; packed functions -  to be deleted
 
 ;;; ==============================================================
 ;;; BLAS 2 packed
@@ -275,3 +275,4 @@
 		 (array-sap X) 1 (pmatrix-sap dest))
 	dest))))
 
+|#

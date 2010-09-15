@@ -1,4 +1,4 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 (defun pseudo-inverse (A)
   (let ((diag (make-matrix (reverse (array-dimensions A))

@@ -1,7 +1,9 @@
-(in-package :sb-math)
+(in-package :sb-math2)
 
 ;;; quaternion q=w+ix+jy+kz is represented as 4-vector: [w x y z]
 ;;; every operation is destructive (if it can be destructive), except q-prod
+
+;;; this code exists, and no more. currently not for real usage
 
 (defparameter *quaternion-type* 'double-float)
 
