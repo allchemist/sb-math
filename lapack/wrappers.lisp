@@ -1,4 +1,4 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (defun lapack-char-code (char)
   (char-code
@@ -41,7 +41,7 @@
 (defmacro define-lapack-routine (name result args)
   (let ((defs nil))
     (dolist (type '(s d c z))
-      (let ((fullname (intern (concat-as-strings '% type name) :sb-math2))
+      (let ((fullname (intern (concat-as-strings '% type name) :sb-math))
 	    (alien-name (concat-as-strings type name '_)))
 	(push `(define-alien-routine (,(string-downcase alien-name) ,fullname) ,result
 		 ,@(let ((arglst nil))
@@ -61,8 +61,8 @@
   (let ((ext-args (append rest-args array-args))
 	(defs nil))
     (dolist (type '(s d c z))
-      (let ((alien-name (intern (concat-as-strings '% type name) :sb-math2))
-	    (fullname (intern (concat-as-strings type name) :sb-math2)))
+      (let ((alien-name (intern (concat-as-strings '% type name) :sb-math))
+	    (fullname (intern (concat-as-strings type name) :sb-math)))
 	(push `(defun ,fullname
 		   ,(remove nil
 		     (mapcar #'(lambda (arg)

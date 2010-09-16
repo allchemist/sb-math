@@ -1,8 +1,8 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (defparameter *libs* nil)
 (defparameter *root-path*
-  (let ((path (namestring (asdf:component-relative-pathname (asdf:find-system :sb-math2)))))
+  (let ((path (namestring (asdf:component-relative-pathname (asdf:find-system :sb-math)))))
     (if (search ".asd" path)
 	(subseq path 0 (1+ (position #\/ path :from-end t)))
 	path)))

@@ -1,7 +1,12 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 ;; misc utils
 ;; kludges and bicycles inside
+
+(export
+ '(*default-type* in-type square random-value
+   ! simple-rng plain-rng ~=))
+
 
 (defparameter *default-type* 'single-float)
 

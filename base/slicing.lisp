@@ -1,4 +1,7 @@
-(in-package :sb-math2)
+(in-package :sb-math)
+
+(export
+ '(col row))
 
 (define-with-types col (:matrix-args (matrix dest) :rest-args (idx dim))
   (declare (type fixnum idx dim))

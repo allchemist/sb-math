@@ -1,4 +1,4 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (defun double-list (elem)
   (list elem elem))

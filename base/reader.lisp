@@ -1,4 +1,4 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 ;; utils for macro reading arrays with type auto-detecting
 

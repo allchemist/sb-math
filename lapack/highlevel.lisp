@@ -1,4 +1,4 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (defun lu (A)
   (let ((dim (dim0 A))

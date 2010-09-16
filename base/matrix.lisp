@@ -1,4 +1,7 @@
-(in-package :sb-math2)
+(in-package :sb-math)
+
+(export
+ '(dim0 dim1 make-matrix make-matrix-like make-random-matrix do-matrix print-matrix))
 
 ;; get matrix dimensions
 
@@ -41,32 +44,36 @@
 			 (d double-float)
 			 (c (complex single-float))
 			 (z (complex double-float))))
-	   (push
-	    `(defmacro ,(intern (string-upcase (concat-as-strings (first type) 'do-matrix)) :sb-math2)
-		 ((matrix &rest subscripts) &body body)
-	       (let ((i (first subscripts))
-		     (j (or (second subscripts) (gensym))))
-		 `(dotimes (,i (the fixnum (dim0 ,matrix))
-			    (the (simple-array ,',(second type)) ,matrix))
-		    (declare (type (simple-array ,',(second type)) ,matrix)
-			     (type fixnum i)
-			     (optimize speed))
-		    ,(if (second subscripts)
-			 `(dotimes (,j (dim1 ,matrix))
-			    (declare (type fixnum ,j))
-			    ,@body)
-			 `(progn
-			    ,@body)))))
-	    defs))
-	 (push 
-	  `(defmacro do-matrix ((matrix &rest subscripts) &body body)
-	     `(float-choice-funcall (array-element-type ,matrix) do-matrix nil
-				    (,matrix ,@subscripts) ,@body))
-	  defs)
-	 `(progn ,@(nreverse defs)))))
+	   (let ((name (intern (string-upcase (concat-as-strings (first type) 'do-matrix)) :sb-math)))
+	     (push `(export ',name) defs)
+	     (push
+	      `(defmacro ,name
+		   ((matrix &rest subscripts) &body body)
+		 (let ((i (first subscripts))
+		       (j (or (second subscripts) (gensym))))
+		   `(dotimes (,i (the fixnum (dim0 ,matrix))
+			      (the (simple-array ,',(second type)) ,matrix))
+		      (declare (type (simple-array ,',(second type)) ,matrix)
+			       (type fixnum i)
+			       (optimize speed))
+		      ,(if (second subscripts)
+			   `(dotimes (,j (dim1 ,matrix))
+			      (declare (type fixnum ,j))
+			      ,@body)
+			   `(progn
+			      ,@body)))))
+	      defs))
+	   (push 
+	    `(defmacro do-matrix ((matrix &rest subscripts) &body body)
+	       `(float-choice-funcall (array-element-type ,matrix) do-matrix nil
+				      (,matrix ,@subscripts) ,@body))
+	    defs)
+	   `(progn ,@(nreverse defs))))))
   (make-matrix-iterator))
 
 ;; printing matrices
+
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
 (defun make-control-string (val prec exp?)
   (if (complexp val)
@@ -104,6 +111,8 @@
       (let ((val (aref matrix i j)))
 	(apply #'format dest (make-control-string val prec exp?) (maybe-complex-arglist val)))))
   (terpri dest))
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))
 
 ;; approximate equality
 

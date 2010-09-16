@@ -2,7 +2,7 @@
 ;    (:use :common-lisp :sb-math)
 ;  (:export :run-tests :run-all-tests))
 
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (export '(run-tests run-all-tests))
 

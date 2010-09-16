@@ -1,4 +1,4 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (defmacro float-type-choice (type single double complex-single complex-double)
   `(cond ((eq ,type 'single-float) ,single)
@@ -38,7 +38,7 @@
       (let* ((pre (first type))
 	     (float-type (second type))
 	     (array-type `(simple-array ,float-type))
-	     (typed-name (intern (string-upcase (concat-as-strings prefix pre name)) :sb-math2)))
+	     (typed-name (intern (string-upcase (concat-as-strings prefix pre name)) :sb-math)))
 	(push
 	 `(declaim (ftype (function (,@(make-list (length matrix-args) :initial-element array-type)
 				     ,@(make-list (length float-args) :initial-element float-type)

@@ -1,4 +1,9 @@
-(in-package :sb-math2)
+(in-package :sb-math)
+
+(export
+ '(imin imax mmin mmax
+   iamin iamax ammin ammax
+   msum amsum mean))
 
 (declaim (inline imin imax iamin iamax))
 
@@ -96,5 +101,8 @@
   (declare (type simple-array matrix)
 	   (optimize speed))
   (float-choice-funcall (array-element-type matrix) amsum nil matrix))
+
+(defun mean (matrix)
+  (/ (msum matrix) (array-total-size matrix)))
 
 (declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))

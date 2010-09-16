@@ -1,10 +1,10 @@
-(in-package :sb-math2)
+(in-package :sb-math)
 
 (declaim (inline float-sizeof array-sap object-sap complex-sap maybe-complex))
 
-(declaim (ftype (function (t) integer) float-sizeof))
+(declaim (ftype (function (t) fixnum) float-sizeof))
 (defun float-sizeof (type)
-  (the integer
+  (the fixnum
     (cond ((eq type 'single-float) 4)
 	  ((eq type 'double-float) 8)
 	  ((equal type '(complex single-float)) 8)
@@ -16,8 +16,7 @@
 (declaim (ftype (function (simple-array) system-area-pointer) array-sap))
 (defun array-sap (array)
   (declare (type simple-array array)
-	   (optimize speed)
-	   (sb-ext:muffle-conditions sb-ext:compiler-note))
+	   (optimize speed))
   (the system-area-pointer
     (sb-sys:vector-sap
      (the simple-array
@@ -58,11 +57,10 @@ this gets sap of displaced array, too
 ;; if the header size differs there
 (defun complex-sap (complex)
   (declare (optimize speed)
-	   (inline object-sap)
-	   (sb-ext:muffle-conditions sb-ext:compiler-note))
+	   (inline object-sap))
   (the system-area-pointer
     (sb-sys:sap+ (the system-area-pointer (object-sap complex))
-		 (the integer (if (sb-kernel:complex-single-float-p complex)
+		 (the fixnum (if (sb-kernel:complex-single-float-p complex)
 		   4 8)))))
 
 (defun maybe-complex (number)

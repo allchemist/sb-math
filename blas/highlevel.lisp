@@ -1,4 +1,11 @@
-(in-package :sb-math2)
+(in-package :sb-math)
+
+(export
+ '(swap copy copy-with-offset axpy m+ m- m*c
+   inner-prod e-norm normalize
+   gemv ger trmv symv hemv syr her gemv))
+
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
 ;;; ==============================================================
 ;;; BLAS 1
@@ -276,3 +283,5 @@
 	dest))))
 
 |#
+
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
