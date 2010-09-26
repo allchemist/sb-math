@@ -46,6 +46,7 @@
       (if (vectorp B) (copy X) (transpose X)))))
 
 (defun svd (A &key (left :none) (right :none) (values :vector))
+  (declare (sb-ext:muffle-conditions warning))
   (let* ((AT (transpose A))
 	 (dim0 (dim1 AT)) (dim1 (dim0 AT))
 	 (min-dim (min dim0 dim1))
@@ -68,34 +69,36 @@
 			    :element-type type))
 	 (rwork (when complex? (make-matrix (* 5 min-dim) :element-type real-type))))
     (let ((info
-	   (sb-sys:with-pinned-objects (AT S U VT work)
-	     (apply (float-function-choice gesvd type :no-% t)
-		    (lapack-char-code left) (lapack-char-code right)
-		    AT S U VT work (if complex? (list rwork) '())))))
+	   (if complex?
+	       (sb-sys:with-pinned-objects (AT S U VT work rwork)
+		 (float-choice-funcall type gesvd nil
+		   (lapack-char-code left) (lapack-char-code right)
+		   AT S U VT work rwork))
+	       (sb-sys:with-pinned-objects (AT S U VT work)
+		 (float-choice-funcall type gesvd nil
+		   (lapack-char-code left) (lapack-char-code right)
+		   AT S U VT work)))))
       (cond ((zerop info)
 	     (let ((diag nil))
 	       (ecase values
 		 (:vector (setf diag S))
-		 (:matrix (progn
-			    (setf diag (make-matrix (array-dimensions A)
-						    :element-type type))
-			    (do-diag (diag i)
-			      (setf (aref diag i i) (coerce (aref S i) type)))))
-		 (:packed (progn
-			    (setf diag (make-pmatrix (array-dimensions A)
-						     :element-type type
-						     :pack-type :diagonal))
-			    (let ((diag-vec (pmatrix-storage-vector diag)))
-			      (do-matrix (diag-vec i)
-				(setf (aref diag-vec i) (coerce (aref S i) type)))))))
+		 (:matrix (setf diag (setf (diag (make-matrix (array-dimensions A) :element-type type)) S))))
+; currently no packed matrix support
+;		 (:packed (progn
+;			    (setf diag (make-pmatrix (array-dimensions A)
+;						     :element-type type
+;						     :pack-type :diagonal))
+;			    (let ((diag-vec (pmatrix-storage-vector diag)))
+;			      (do-matrix (diag-vec i)
+;				(setf (aref diag-vec i) (coerce (aref S i) type)))))))
 	       (values diag
 		       (if (eq left :none) nil (transpose U))
 		       (if (eq right :none) nil (transpose VT)))))
 	    ((minusp info)
-	     (error "Illegal ~A'th parameter for %esvd" (- info)))
+	     (error "Illegal ~A'th parameter for %_gesvd" (- info)))
 	    ((plusp info)
 	     (error "~A superdiagonals did not converge" info))))))
-
+#|
 (defun eigen (A &key (right :eval) (left :none) (values :vector) (real-values nil))
   (let* ((dim (dim0 A))
 	 (type (array-element-type A))
@@ -137,6 +140,7 @@
 	       (if (eq right :none) nil (transpose vr))
 	       (if (eq left :none) nil (transpose vl))))
 	    ((minusp info)
-	     (error "Illegal ~A'th parameter for geev" (- info)))
+	     (error "Illegal ~A'th parameter for %_geev" (- info)))
 	    ((plusp info)
 	     (error "QR failed"))))))
+|#

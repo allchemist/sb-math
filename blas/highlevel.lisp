@@ -3,7 +3,7 @@
 (export
  '(swap copy copy-with-offset axpy m+ m- m*c
    inner-prod e-norm normalize
-   gemv ger trmv symv hemv syr her gemv))
+   gemv ger trmv symv hemv syr her gemm))
 
 (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
@@ -94,7 +94,7 @@
 ;;; ==============================================================
 ;;; BLAS 2
 
-(defun gemv (A X &key dest (alpha 1.0) (beta 1.0) (transA :notrans))
+(defun gemv (A X &key dest (alpha 1.0) (beta 0.0) (transA :notrans))
   (declare (optimize speed)
 	   (type simple-array A X))
   (let ((type (array-element-type A))

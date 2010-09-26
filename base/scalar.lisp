@@ -10,7 +10,7 @@
 (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 ;; shut up compiler comments "can't tell the rank at compile time"
 
-(define-with-types imin (:matrix-args matrix :return-type fixnum :only-real t)
+(define-with-types imin (:matrix-args matrix :return :body :only-real t)
   (let ((min-val (the float-type (row-major-aref matrix 0)))
 	(min-pos (the fixnum 0)))
     (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
@@ -19,7 +19,7 @@
 	  (setf min-val cur-val
 		min-pos i))))))
 
-(define-with-types imax (:matrix-args matrix :return-type fixnum :only-real t)
+(define-with-types imax (:matrix-args matrix :return :body :only-real t)
   (let ((min-val (the float-type (row-major-aref matrix 0)))
 	(min-pos (the fixnum 0)))
     (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
@@ -49,7 +49,7 @@
 (defun mmin (matrix) (row-major-aref matrix (imin matrix)))
 (defun mmax (matrix) (row-major-aref matrix (imax matrix)))
 
-(define-with-types iamin (:matrix-args matrix :return-type fixnum)
+(define-with-types iamin (:matrix-args matrix :return :body)
   (let ((min-val (abs (the float-type (row-major-aref matrix 0))))
 	(min-pos (the fixnum 0)))
     (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
@@ -58,7 +58,7 @@
 	  (setf min-val cur-val
 		min-pos i))))))
 
-(define-with-types iamax (:matrix-args matrix :return-type fixnum)
+(define-with-types iamax (:matrix-args matrix :return :body)
   (let ((min-val (abs (the float-type (row-major-aref matrix 0))))
 	(min-pos (the fixnum 0)))
     (dotimes (i (the fixnum (array-total-size matrix)) min-pos)
@@ -68,19 +68,16 @@
 		min-pos i))))))
 
 (defun iamin (matrix)
-  (declare (type simple-array matrix)
-	   (optimize speed))
+  (declare (sb-ext:muffle-conditions warning))
   (float-choice-funcall (array-element-type matrix) iamin nil matrix))
-
 (defun iamax (matrix)
-  (declare (type simple-array matrix)
-	   (optimize speed))
+  (declare (sb-ext:muffle-conditions warning))
   (float-choice-funcall (array-element-type matrix) iamax nil matrix))
 			  
 (defun ammin (matrix) (row-major-aref matrix (iamin matrix)))
 (defun ammax (matrix) (row-major-aref matrix (iamax matrix)))
 
-(define-with-types msum (:matrix-args matrix :return-type t)
+(define-with-types msum (:matrix-args matrix :return :body)
   (let ((sum (the float-type (coerce 0.0 'float-type))))
     (dotimes (i (the fixnum (array-total-size matrix)))
       (incf sum (row-major-aref matrix i)))
@@ -91,7 +88,7 @@
 	   (optimize speed))
   (float-choice-funcall (array-element-type matrix) msum nil matrix))
 
-(define-with-types amsum (:matrix-args matrix :return-type t)
+(define-with-types amsum (:matrix-args matrix :return :body)
   (let ((sum 0))
     (dotimes (i (the fixnum (array-total-size matrix)))
       (incf sum (abs (row-major-aref matrix i))))

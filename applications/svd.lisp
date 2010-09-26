@@ -1,21 +1,17 @@
 (in-package :sb-math)
 
 (defun pseudo-inverse (A)
-  (let ((diag (make-matrix (reverse (array-dimensions A))
-			   :element-type (array-element-type A))))
-    (multiple-value-bind (S U VT)
-	(svd A :left :all :right :all)
-      (do-diag (diag i)
-	(setf (aref diag i i) (/ (aref S i))))
-      (gemm (gemm VT diag :transa :trans) U :transb :trans))))
+  (multiple-value-bind (S U VT)
+      (svd A :left :all :right :all)
+    (gemm 
+     (gemm VT (setf (diag (make-matrix-like A)) (map-matrix-/ S)) :transa :trans)
+     U :transb :trans)))
 
 (defun em-norm (A)
   (elt (svd A) 0))
 
 (defun fm-norm (A)
-  (sqrt (amsum (map-matrix
-	       (svd A)
-	      #'square))))
+  (sqrt (amsum (map-matrix-square (svd A)))))
 
 (defun cond-number (A)
   (let* ((S (svd A))

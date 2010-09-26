@@ -3,7 +3,8 @@
 (export
  '(row-perm random-permutation transpose))
 
-(define-with-types row-perm (:matrix-args (matrix dest) :rest-args perm)
+(define-with-types row-perm (:matrix-args (matrix dest) :rest-args perm 
+			     :return (the (simple-array float-type) dest))
   (let ((dest-pos 0) (source-pos 0) (dim0 (dim0 matrix)) (dim1 (dim1 matrix)))
     (declare (type fixnum dest-pos source-pos dim0 dim1)
 	     (type (simple-array fixnum) perm))
@@ -14,8 +15,7 @@
 	(setf (row-major-aref dest dest-pos)
 	      (row-major-aref matrix source-pos))
 	(incf dest-pos)
-	(incf source-pos)))
-    dest))
+	(incf source-pos)))))
 
 (defun row-perm (matrix perm &optional dest)
   (declare (type simple-array matrix)
@@ -35,8 +35,8 @@
 
 ;; tmp
 (defun random-permutation (size)
-  (let ((perm (the (simple-array (unsigned-byte 32))
-		(make-array size :element-type '(unsigned-byte 32)))))
+  (let ((perm (the (simple-array fixnum)
+		(make-array size :element-type 'fixnum))))
     (dotimes (i size)
       (setf (aref perm i) i))
     (dotimes (i (1+ (random size)))
@@ -45,11 +45,10 @@
     perm))
 
 
-(define-with-types transpose (:matrix-args (matrix dest))
+(define-with-types transpose (:matrix-args (matrix dest) :return (the (simple-array float-type) dest))
   (dotimes (i (dim0 matrix))
     (dotimes (j (dim1 matrix))
-      (setf (aref dest j i) (aref matrix i j))))
-  dest)
+      (setf (aref dest j i) (aref matrix i j)))))
 
 (defun transpose (matrix &optional dest)
   (declare (type simple-array matrix)

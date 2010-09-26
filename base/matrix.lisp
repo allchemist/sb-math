@@ -21,11 +21,13 @@
 ;; matrix creating
 
 (defmacro make-matrix (dimensions &rest keys &key &allow-other-keys)
-  `(make-array ,dimensions
-	       :element-type ,(if (member :element-type keys)
-				  (second keys)
-				  '*default-type*)
-	       ,@(cddr keys)))
+  (if (member :element-type keys)
+      `(make-array ,dimensions
+		   :element-type ,(second keys)
+		   ,@(cddr keys))
+      `(make-array ,dimensions
+		   :element-type *default-type*
+		   ,@keys)))
 
 (defmacro make-matrix-like (matrix)
   `(make-array (array-dimensions ,matrix) :element-type (array-element-type ,matrix)))
@@ -99,7 +101,7 @@
 (defgeneric print-matrix (matrix &key dest prec exp?))
 
 (defmethod print-matrix ((matrix vector) &key (dest t) (prec 3) (exp? nil))
-  (do-matrix (matrix i)
+  (dotimes (i (dim0 matrix))
     (let ((val (aref matrix i)))
       (apply #'format dest (make-control-string val prec exp?) (maybe-complex-arglist val))))
   (terpri dest))

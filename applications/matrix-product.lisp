@@ -1,5 +1,6 @@
 (in-package :sb-math)
 
+#|
 ;; generic matrix product
 
 (defgeneric matrix-product (m1 m2 &rest keys &key dest &allow-other-keys))
@@ -24,6 +25,7 @@
   (print 'triangular-to-vector)
   (apply #'tpmv m1 (if dest (copy m2 dest) (copy m2)) keys))
 
+
 (defmethod matrix-product ((m1 symmetric-matrix) (m2 vector)
 			   &rest keys &key dest &allow-other-keys)
   (print 'symmeric-to-vector)
@@ -33,7 +35,7 @@
 			   &rest keys &key dest &allow-other-keys)
   (print 'hermitian-to-vector)
   (apply #'hpmv m1 m2 :dest dest keys))
-
+|#
 
 ;; basis rotation
 

@@ -35,7 +35,7 @@
 	     (:file "aliens" :depends-on ("module" "wrappers"))
 	     (:file "lowlevel" :depends-on ("module" "wrappers" "aliens"))
 	     (:file "highlevel" :depends-on ("module" "wrappers" "aliens" "lowlevel"))))
-#|   (:module lapack
+   (:module lapack
 	    :depends-on (base lib blas)
 	    :components
 	    ((:file "module")
@@ -49,7 +49,7 @@
 	    ((:file "module")
 	     (:file "matrix-product" :depends-on ("module"))
 	     (:file "svd" :depends-on ("module"))))
-   (:module tests
+#|   (:module tests
 	    :depends-on (base lib blas lapack)
 	    :components
 	    ((:file "deftest")))))

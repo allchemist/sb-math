@@ -11,8 +11,7 @@
 (define-with-types map-matrix (:matrix-args matrix :rest-args func)
   (dotimes (i (the fixnum (array-total-size matrix)))
     (setf (the float-type (row-major-aref matrix i))
-	  (the float-type (funcall func (the float-type (row-major-aref matrix i))))))
-  matrix)
+	  (the float-type (funcall func (the float-type (row-major-aref matrix i)))))))
 
 (defun map-matrix (matrix func)
   (float-choice-funcall (array-element-type matrix) map-matrix nil
@@ -23,8 +22,7 @@
   (dotimes (i (the fixnum (array-total-size m1)))
     (setf (the float-type (row-major-aref m1 i))
 	  (the float-type (funcall func (the float-type (row-major-aref m1 i))
-				        (the float-type (row-major-aref m2 i))))))
-  m1)
+				        (the float-type (row-major-aref m2 i)))))))
 
 (defun map-two-matrices (m1 m2 func)
   (float-choice-funcall (array-element-type m1) map-two-matrices nil
@@ -40,8 +38,7 @@
      `(define-with-types ,name (:matrix-args matrix)
 	(dotimes (i (the fixnum (array-total-size matrix)))
 	  (setf (the float-type (row-major-aref matrix i))
-		(the float-type (,func (the float-type (row-major-aref matrix i))))))
-	(the (simple-array float-type) matrix))
+		(the float-type (,func (the float-type (row-major-aref matrix i)))))))
      defs)
     (push
      `(defun ,name (matrix)
@@ -58,8 +55,7 @@
 	  (setf (the float-type (row-major-aref m1 i))
 		(the float-type
 		  (,func (the float-type (row-major-aref m1 i))
-			 (the float-type (row-major-aref m2 i))))))
-	(the (simple-array float-type) m1))
+			 (the float-type (row-major-aref m2 i)))))))
      defs)
     (push `(declaim (inline ,name)) defs)
     (push `(export ',name) defs)
@@ -74,6 +70,8 @@
 (define-mapping-function 1+)
 (define-mapping-function 1-)
 (define-mapping-function tanh)
+(define-mapping-function -)
+(define-mapping-function /)
 
 (define-pair-mapping-function *)
 (define-pair-mapping-function /)
