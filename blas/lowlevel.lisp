@@ -29,6 +29,15 @@
 (define-alien-wrapper gemv :matrix-args (A X dest) :float-args (alpha beta) :rest-args transA
   :alien-args ('CBlasRowMajor transA (dim0 A) (dim1 A) alpha A (dim1 A) X 1 beta dest 1))
 
+(defvar %sgemvd) (defvar %dgemvd) (defvar %cgemvd) (defvar %zgemvd)
+(setf (symbol-function '%sgemvd) (function %sgemv))
+(setf (symbol-function '%dgemvd) (function %dgemv))
+(setf (symbol-function '%cgemvd) (function %cgemv))
+(setf (symbol-function '%zgemvd) (function %zgemv))
+
+(define-alien-wrapper gemvd :matrix-args (A X dest) :float-args (alpha beta) :rest-args transA
+  :alien-args ('CBlasRowMajor transA (dim0 dest) (dim1 A) alpha A (dim1 A) X 1 beta dest 1))
+
 (define-alien-wrapper gemm :matrix-args (A B dest) :float-args (alpha beta) :rest-args (transA transB)
    :lets ((M 0) (N 0) (K 0) (K1 0) (LDA 0) (LDB 0) (LDC 0))
    :pre

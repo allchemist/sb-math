@@ -40,6 +40,8 @@
 	  (setf (the float-type (row-major-aref matrix i))
 		(the float-type (,func (the float-type (row-major-aref matrix i)))))))
      defs)
+    (push `(export ',name) defs)
+    (push `(declaim (inline ,name)) defs)
     (push
      `(defun ,name (matrix)
 	(float-choice-funcall (array-element-type matrix) ,name nil matrix))

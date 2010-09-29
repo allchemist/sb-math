@@ -105,11 +105,32 @@
 	      dim1 (dim1 A))
 	(setf dim0 (dim1 A)
 	      dim1 (dim0 A)))
-    (assert (= dim1 (dim0 X)) nil "Improper dimensions for gemv")
+    (assert (<= dim1 (dim0 X)) nil "Improper dimensions for gemv")
     (if dest
 	(assert (<= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
 	(setf dest (the simple-array (make-matrix dim0 :element-type type))))
     (float-choice-funcall type gemv nil
+      A X (the simple-array dest) alpha beta transA)))
+
+;; KLUDGE
+;; dest-size driven gemv
+(export 'gemvd)
+(defun gemvd (A X &key dest (alpha 1.0) (beta 0.0) (transA :notrans))
+  (declare (optimize speed)
+	   (type simple-array A X))
+  (let ((type (array-element-type A))
+	(dim0 0) (dim1 0))
+    (declare (type fixnum dim0 dim1))
+    (if (eq transA :notrans)
+	(setf dim0 (dim0 A)
+	      dim1 (dim1 A))
+	(setf dim0 (dim1 A)
+	      dim1 (dim0 A)))
+    (assert (<= dim1 (dim0 X)) nil "Improper dimensions for gemv")
+    (if dest
+	(assert (>= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
+	(setf dest (the simple-array (make-matrix dim0 :element-type type))))
+    (float-choice-funcall type gemvd nil
       A X (the simple-array dest) alpha beta transA)))
 
 (defun ger (X Y &key dest (alpha 1.0) (conj :noconj))
