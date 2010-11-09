@@ -3,7 +3,7 @@
 (export
  '(swap copy copy-with-offset axpy m+ m- m*c
    inner-prod e-norm normalize
-   gemv ger trmv symv hemv syr her gemm))
+   gemv ger trmv symv hemv syr her gemm trmm))
 
 (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
