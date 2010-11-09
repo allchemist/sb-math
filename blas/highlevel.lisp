@@ -228,6 +228,17 @@
     (float-choice-funcall type gemm nil
       A B (the simple-array dest) alpha beta transa transb)))
 
+(defun trmm (A B &key (alpha 1.0) (side :left) (uplo :upper) (transA :notrans))
+  (declare (optimize speed)
+	   (type simple-array A B))
+  (assert
+   (if (eq side :left)
+       (= (dim0 A) (dim1 A) (dim0 B))
+       (= (dim0 A) (dim1 A) (dim1 B)))
+   nil "Improper dimensions for trmm")
+  (float-choice-funcall (array-element-type A) trmm nil
+    A B alpha side uplo transA))
+
 #|
 ;;; packed functions -  to be deleted
 

@@ -29,6 +29,7 @@
 (define-alien-wrapper gemv :matrix-args (A X dest) :float-args (alpha beta) :rest-args transA
   :alien-args ('CBlasRowMajor transA (dim0 A) (dim1 A) alpha A (dim1 A) X 1 beta dest 1))
 
+#|
 (defvar %sgemvd) (defvar %dgemvd) (defvar %cgemvd) (defvar %zgemvd)
 (setf (symbol-function '%sgemvd) (function %sgemv))
 (setf (symbol-function '%dgemvd) (function %dgemv))
@@ -37,6 +38,13 @@
 
 (define-alien-wrapper gemvd :matrix-args (A X dest) :float-args (alpha beta) :rest-args transA
   :alien-args ('CBlasRowMajor transA (dim0 dest) (dim1 A) alpha A (dim1 A) X 1 beta dest 1))
+|#
+
+(define-alien-wrapper trmm :matrix-args (A B) :float-args alpha :rest-args (side uplo transA)
+  :lets ((M (dim0 B)) (N (dim1 B)) (lda 0))
+  :pre ((declare (type fixnum M N lda))
+	(if (eq side :left) (setf lda M) (setf lda N)))
+  :alien-args ('CBlasRowMajor side uplo transA :nonunit M N alpha A lda B N))
 
 (define-alien-wrapper gemm :matrix-args (A B dest) :float-args (alpha beta) :rest-args (transA transB)
    :lets ((M 0) (N 0) (K 0) (K1 0) (LDA 0) (LDB 0) (LDC 0))
@@ -77,7 +85,6 @@
     (assert (= K K1) nil "Improper dimensions for gemm"))
    :alien-args
    ('CblasRowMajor transA transB M N K alpha A LDA B LDB beta dest LDC))
-
 
 ;; individual declarations of non-standard functions
 

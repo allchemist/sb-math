@@ -4,7 +4,7 @@
   (multiple-value-bind (S U VT)
       (svd A :left :all :right :all)
     (gemm 
-     (gemm VT (setf (diag (make-matrix-like A)) (map-matrix-/ S)) :transa :trans)
+     (gemm VT (setf (diag (make-matrix-like A)) (map-matrix-/ S)) :transa :trans :transb :trans)
      U :transb :trans)))
 
 (defun em-norm (A)

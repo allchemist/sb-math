@@ -1,7 +1,7 @@
 (in-package :sb-math)
 
 (export
- '(map-matrix map-two-matrices))
+ '(map-matrix map-two-matrices map-three-matrices))
 
 (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
@@ -28,6 +28,18 @@
   (float-choice-funcall (array-element-type m1) map-two-matrices nil
 			m1 m2 func))
 
+;; map three matrices
+;; KLUDGE specially for `annil'
+(define-with-types map-three-matrices (:matrix-args (m1 m2 m3) :rest-args func)
+  (dotimes (i (the fixnum (array-total-size m1)))
+    (setf (the float-type (row-major-aref m1 i))
+	  (the float-type (funcall func (the float-type (row-major-aref m1 i))
+				        (the float-type (row-major-aref m2 i))
+					(the float-type (row-major-aref m3 i)))))))
+
+(defun map-three-matrices (m1 m2 m3 func)
+  (float-choice-funcall (array-element-type m1) map-three-matrices nil
+			m1 m2 m3 func))
 
 ;; mapping with specified functions
 
