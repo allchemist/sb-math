@@ -52,3 +52,6 @@
 
 #+x86 (define-foreign-library :lapack "lib/liblapack.so")
 #+x86-64 (define-foreign-library :lapack "lib/liblapack64.so")
+
+#+x86 (define-foreign-library :pppack "lib/libpppack.so")
+#+x86-64 "Sorry, 64-bit pppack currently not supported"

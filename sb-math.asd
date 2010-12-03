@@ -27,6 +27,13 @@
 	    :depends-on (base)
 	    :components
 	    ((:file "load-libs")))
+   (:module pppack
+	    :depends-on (base lib)
+	    :serial t
+	    :components
+	    ((:file "module")
+	     (:file "lowlevel")
+	     (:file "highlevel")))
    (:module blas
 	    :depends-on (base lib)
 	    :components
