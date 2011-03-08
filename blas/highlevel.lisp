@@ -55,7 +55,8 @@
 (defun axpy (X Y alpha)
   (declare (type simple-array X Y)
 	   (optimize speed))
-  (float-choice-funcall (array-element-type X) axpy nil X Y alpha))
+  (let ((type (array-element-type X)))
+    (float-choice-funcall type axpy nil X Y (coerce alpha type))))
 
 (defun m+ (m1 m2) (axpy m2 m1 1.0))
 (defun m- (m1 m2) (axpy m2 m1 -1.0))
@@ -110,8 +111,9 @@
 	(assert (<= dim0 (dim0 dest)) nil "Improper dimensions for gemv")
 	(setf dest (the simple-array (make-matrix dim0 :element-type type))))
     (float-choice-funcall type gemv nil
-      A X (the simple-array dest) alpha beta transA)))
+      A X (the simple-array dest) (coerce alpha type) (coerce beta type) transA)))
 
+#|
 ;; KLUDGE
 ;; dest-size driven gemv
 (export 'gemvd)
@@ -132,6 +134,7 @@
 	(setf dest (the simple-array (make-matrix dim0 :element-type type))))
     (float-choice-funcall type gemvd nil
       A X (the simple-array dest) alpha beta transA)))
+|#
 
 (defun ger (X Y &key dest (alpha 1.0) (conj :noconj))
   (declare (type simple-array X Y)
@@ -144,7 +147,7 @@
 	(setf dest (the simple-array (make-matrix (list (dim0 X) (dim0 Y)) :element-type type))))
     (sb-sys:with-pinned-objects (dest X Y alpha)
       (float-choice-funcall type ger nil
-        (the simple-array dest) X Y alpha conj))))
+        (the simple-array dest) X Y (coerce alpha type) conj))))
 
 ;; not optimized, but waiting for their hour
 
@@ -226,7 +229,7 @@
 		nil "Improper dimensions for gemm")
 	(setf dest (the simple-array (make-matrix `(,M ,N) :element-type type))))
     (float-choice-funcall type gemm nil
-      A B (the simple-array dest) alpha beta transa transb)))
+      A B (the simple-array dest) (coerce alpha type) (coerce beta type) transa transb)))
 
 (defun trmm (A B &key (alpha 1.0) (side :left) (uplo :upper) (transA :notrans))
   (declare (optimize speed)
@@ -236,8 +239,9 @@
        (= (dim0 A) (dim1 A) (dim0 B))
        (= (dim0 A) (dim1 A) (dim1 B)))
    nil "Improper dimensions for trmm")
-  (float-choice-funcall (array-element-type A) trmm nil
-    A B alpha side uplo transA))
+  (let ((type (array-element-type A)))
+    (float-choice-funcall type trmm nil
+			  A B (coerce alpha type) side uplo transA)))
 
 #|
 ;;; packed functions -  to be deleted

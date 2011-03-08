@@ -8,58 +8,58 @@
   :licence "BSD"
   :version "1.1"
   :depends-on ()
+  :serial t
   :components
   ((:module base
+	    :serial t
 	    :components
 	    ((:file "package")
-	     (:file "misc" :depends-on ("package"))
-	     (:file "quaternions" :depends-on ("package" "misc"))
-	     (:file "reader" :depends-on ("package"))
-	     (:file "interface" :depends-on ("package" "misc"))
-	     (:file "wrappers" :depends-on ("package" "misc"))
-	     (:file "mapping" :depends-on ("package" "misc" "wrappers"))
-	     (:file "matrix" :depends-on ("package" "misc" "wrappers"))
-	     (:file "slicing" :depends-on ("package" "misc" "wrappers"))
-	     (:file "scalar" :depends-on ("package" "misc" "wrappers"))
-	     (:file "elementwize" :depends-on ("package" "misc" "wrappers" "mapping"))
-	     (:file "permutation" :depends-on ("package" "misc" "wrappers"))))
+	     (:file "misc")
+	     (:file "quaternions")
+	     (:file "reader")
+	     (:file "interface")
+	     (:file "wrappers")
+	     (:file "mapping")
+	     (:file "matrix")
+	     (:file "slicing")
+	     (:file "scalar")
+	     (:file "elementwize")
+	     (:file "permutation")))
    (:module lib
-	    :depends-on (base)
 	    :components
 	    ((:file "load-libs")))
    (:module pppack
-	    :depends-on (base lib)
 	    :serial t
 	    :components
 	    ((:file "module")
 	     (:file "lowlevel")
 	     (:file "highlevel")))
    (:module blas
-	    :depends-on (base lib)
+	    :serial t
 	    :components
 	    ((:file "module")
-	     (:file "wrappers" :depends-on ("module"))
-	     (:file "aliens" :depends-on ("module" "wrappers"))
-	     (:file "lowlevel" :depends-on ("module" "wrappers" "aliens"))
-	     (:file "highlevel" :depends-on ("module" "wrappers" "aliens" "lowlevel"))))
+	     (:file "wrappers")
+	     (:file "aliens")
+	     (:file "lowlevel")
+	     (:file "highlevel")))
    (:module lapack
-	    :depends-on (base lib blas)
+	    :serial t
 	    :components
 	    ((:file "module")
-	     (:file "wrappers" :depends-on ("module"))
-	     (:file "aliens" :depends-on ("module" "wrappers"))
-	     (:file "lowlevel" :depends-on ("module" "wrappers" "aliens"))
-	     (:file "highlevel" :depends-on ("module" "wrappers" "aliens" "lowlevel"))))
+	     (:file "wrappers")
+	     (:file "aliens")
+	     (:file "lowlevel")
+	     (:file "highlevel")))
    (:module applications
-	    :depends-on (base lib blas lapack)
+	    :serial t
 	    :components
 	    ((:file "module")
-	     (:file "matrix-product" :depends-on ("module"))
-	     (:file "svd" :depends-on ("module"))))
+	     (:file "matrix-product")
+	     (:file "svd")))))
 #|   (:module tests
 	    :depends-on (base lib blas lapack)
 	    :components
 	    ((:file "deftest")))))
 	     
 |#
-))
+

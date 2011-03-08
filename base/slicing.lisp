@@ -36,7 +36,6 @@
   (dotimes (i dim)
     (setf (aref matrix i i) (aref source i))))
 
-#|
 (define-with-types sub-matrix (:matrix-args (matrix dest) :rest-args (dimensions offset))
   (let ((row-offset (first offset))
 	(col-offset (second offset))
@@ -58,7 +57,6 @@
       (dotimes (j sub-dim1)
 	(setf (aref matrix (+ row-offset i) (+ col-offset j)) (aref source i j)))))
   matrix)
-|#
 
 ;; highlevel
 
@@ -109,6 +107,18 @@
     (assert (<= (dim0 source) dim1) nil "Destination matrix is too small")
     (float-choice-funcall element-type set-row nil
       matrix source idx dim1)))
+
+(defun sub-matrix (matrix dimensions offset &optional dest)
+  (declare (optimize speed)
+	   (type simple-array matrix))
+  (float-choice-funcall (array-element-type matrix) sub-matrix nil
+			matrix dest dimensions offset))
+
+(defun (setf sub-matrix) (source matrix dimensions offset)
+  (declare (optimize speed)
+	   (type simple-array matrix))
+  (float-choice-funcall (array-element-type matrix) set-sub-matrix nil
+			matrix source dimensions offset))
 
 (defun diag (matrix &optional dest)
   (declare (optimize speed)

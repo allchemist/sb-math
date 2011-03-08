@@ -26,4 +26,3 @@
 			     (* integer) (* double-float) (* integer)))
      (array-sap break) (array-sap coef) (alien-sap (addr *l))
      (alien-sap (addr *k)) (alien-sap (addr *x)) (alien-sap (addr *jderiv)))))
-

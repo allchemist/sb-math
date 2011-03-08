@@ -5,10 +5,11 @@
 
 (export
  '(*default-type* in-type square random-value
-   ! simple-rng plain-rng ~=))
-
+   ! simple-rng plain-rng ~= +e+ linspace))
 
 (defparameter *default-type* 'single-float)
+
+(defconstant +e+ (exp 1))
 
 (defun in-type (num) (coerce num *default-type*))
 (defun square (x) (* x x))
@@ -61,3 +62,11 @@
 (defmethod ~= ((X complex) (Y complex) eps)
   (and (< (abs (- (realpart X) (realpart Y))) eps)
        (< (abs (- (imagpart X) (imagpart Y))) eps)))
+
+(defun linspace (xmin xmax points)
+  (let* ((vec (make-matrix points))
+	 (type (array-element-type vec)))
+    (loop for idx from 0 below points
+	  for val from xmin to xmax by (/ (- xmax xmin) (1- points))
+	  do (setf (aref vec idx) (coerce val type)))
+    vec))

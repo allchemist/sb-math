@@ -52,12 +52,11 @@
 	 defs)
 	(push `(export ',typed-name) defs)
 	(push
-	 (parse-type-defs
+	 (subst float-type 'float-type
 	  `(defun ,typed-name (,@matrix-args ,@float-args ,@rest-args)
 	     (declare (type ,array-type ,@matrix-args)
 		      (type ,float-type ,@float-args)
 		      (optimize speed (safety 0) (space 0)))
-	     ,@(if actual-return (append body (list actual-return)) body))
-	  float-type)
+	     ,@(if actual-return (append body (list actual-return)) body)))
 	 defs)))
     `(progn ,@(nreverse defs))))
