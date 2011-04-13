@@ -98,6 +98,7 @@
 	     (error "Illegal ~A'th parameter for %_gesvd" (- info)))
 	    ((plusp info)
 	     (error "~A superdiagonals did not converge" info))))))
+
 #|
 (defun eigen (A &key (right :eval) (left :none) (values :vector) (real-values nil))
   (let* ((dim (dim0 A))
@@ -115,10 +116,15 @@
     (assert (= dim (dim1 A)) nil "Matrix should be square")
     (let ((info
 	   (sb-sys:with-pinned-objects (A w wr wi vl vr work rwork)    
-	     (apply (float-function-choice geev type :no-% t)
-		    `(,(lapack-char-code left) ,(lapack-char-code right) ,copy-A
-		       ,@(if complex? `(,w) `(,wr ,wi))
-		       ,vl ,vr ,work ,@(if complex? `(,rwork) '()))))))
+	     (if complex?
+		 (float-choice-funcall type geev nil
+				       (lapack-char-code left)
+				       (lapack-char-code right)
+				       copy-A w vl vr work rwork)
+		 (float-choice-funcall type geev nil
+				       (lapack-char-code left)
+				       (lapack-char-code right)
+				       copy-A wr wi vl vr work)))))
       (cond ((zerop info)
 	     (values 
 	       (let ((vec
@@ -132,7 +138,7 @@
 				vals)))))
 		 (ecase values
 		   (:vector vec)
-		   (:matrix (diag vec))
+		   (:matrix (setf (diag (make-matrix-like A)) vec))
 		   (:packed (make-instance 'diagonal-matrix
 					   :storage-vector vec
 					   :ldm dim

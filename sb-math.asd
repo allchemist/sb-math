@@ -21,6 +21,7 @@
 	     (:file "wrappers")
 	     (:file "mapping")
 	     (:file "matrix")
+	     (:file "io")
 	     (:file "slicing")
 	     (:file "scalar")
 	     (:file "elementwize")

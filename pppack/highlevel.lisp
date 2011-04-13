@@ -1,6 +1,6 @@
 (in-package :sb-math)
 
-(export '(csplines make-csplines spline-piece-idx eval-splines splines-coords splines-values splines-coeffs smooth-splines))
+(export '(csplines make-csplines spline-piece-idx eval-splines splines-coords splines-values splines-coeffs smooth))
 
 ;; cubic splines
 
@@ -35,11 +35,10 @@
 	    4 (coerce coord 'double-float) deriv-idx)
    (type-of coord)))
 
-(defun smooth-splines (vector splines linspace-params &key (deriv-idx 0))
-  (let ((result (make-matrix (third linspace-params)))
-	(coords (apply #'linspace linspace-params)))
-    (dolist (i (length coords))
-      (setf (aref result i)
-	    (eval-splines (elt coords i) splines :deriv-idx deriv-idx)))
-    result))
-    
+(defun smooth (data from to)
+  (let ((out (make-matrix (length to)))
+	(spl (make-csplines (coerce-matrix from 'double-float) (coerce-matrix data 'double-float))))
+    (dotimes (i (length to))
+      (setf (aref out i) (eval-splines (elt to i) spl)))
+    out))
+		

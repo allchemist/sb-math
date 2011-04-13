@@ -1,7 +1,7 @@
 (in-package :sb-math)
 
 (export
- '(dim0 dim1 make-matrix make-matrix-like make-random-matrix do-matrix print-matrix coerce-matrix))
+ '(dim0 dim1 make-matrix make-matrix-like make-random-matrix do-matrix print-matrix coerce-matrix linspace))
 
 ;; get matrix dimensions
 
@@ -134,3 +134,11 @@
       (setf (row-major-aref out i)
 	    (coerce (row-major-aref matrix i) type)))
     out))
+
+(defun linspace (xmin xmax points)
+  (let* ((vec (make-matrix points))
+	 (type (array-element-type vec)))
+    (loop for idx from 0 below points
+	  for val from xmin to xmax by (/ (- xmax xmin) (1- points))
+	  do (setf (aref vec idx) (coerce val type)))
+    vec))

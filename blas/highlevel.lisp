@@ -161,13 +161,16 @@
       X)))
 
 (defun symv (A X &key dest (alpha 1) (beta 0) (uplo :upper))
+  (declare (optimize speed)
+	   (type simple-array A X))
   (let ((dim (dim0 A)))
+    (declare (type fixnum dim))
     (assert (= dim (dim1 A) (dim0 X)) nil "Improper dimensions for symv")
     (let ((type (array-element-type A)))
       (assert (not (subtypep type 'complex)) nil "Symmetric matrix should be real")
       (if dest
 	  (assert (<= dim (dim0 dest)) nil "Improper dimensions for symv")
-	  (setf dest (make-matrix dim :element-type type)))
+	  (setf dest (the simple-array (make-matrix dim :element-type type))))
       (sb-sys:with-pinned-objects (A X dest)
 	(float-choice-funcall type symv %
 	 'CBlasRowMajor uplo dim (coerce alpha type) (array-sap A) dim
@@ -175,13 +178,16 @@
 	dest))))
 
 (defun hemv (A X &key dest (alpha #C(1.0 0.0)) (beta #C(0.0 0.0)) (uplo :upper))
+  (declare (optimize speed)
+	   (type simple-array A X))
   (let ((dim (dim0 A)))
+    (declare (type fixnum dim))
     (assert (= dim (dim1 A) (dim0 X)) nil "Improper dimensions for hemv")
     (let ((type (array-element-type A)))
       (assert (subtypep type 'complex) nil "Hermitian matrix should be complex")
       (if dest
 	  (assert (<= dim (dim0 dest)) nil "Improper dimensions for hemv")
-	  (setf dest (make-matrix dim :element-type type)))
+	  (setf dest (the simple-array (make-matrix dim :element-type type))))
       (sb-sys:with-pinned-objects (A X dest alpha beta)
 	(float-choice-funcall type hemv %
 	 'CBlasRowMajor uplo dim (complex-sap (coerce alpha type)) (array-sap A) dim
@@ -189,11 +195,14 @@
 	dest))))
 
 (defun syr (X &key dest (alpha 1) (uplo :upper))
+  (declare (optimize speed)
+	   (type simple-array X))
   (let ((dim (dim0 X)))
+    (declare (type fixnum dim))
     (let ((type (array-element-type X)))
       (if dest
 	  (assert (= (dim0 dest) (dim1 dest) dim) nil "Improper dimensions for syr")
-	  (setf dest (make-matrix (list dim dim) :element-type type)))
+	  (setf dest (the simple-array (make-matrix (list dim dim) :element-type type))))
       (assert (not (subtypep type 'complex)) nil "Symetric matrix should be real")
       (sb-sys:with-pinned-objects (dest X)
 	(float-choice-funcall type syr %
