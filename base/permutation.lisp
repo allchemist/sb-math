@@ -1,7 +1,7 @@
 (in-package :sb-math)
 
 (export
- '(row-perm random-permutation transpose))
+ '(row-perm random-permutation))
 
 (define-with-types row-perm (:matrix-args (matrix dest) :rest-args perm 
 			     :return (the (simple-array float-type) dest))
@@ -45,7 +45,7 @@
     perm))
 
 
-(define-with-types transpose (:matrix-args (matrix dest) :return (the (simple-array float-type) dest))
+#|(define-with-types transpose (:matrix-args (matrix dest) :return (the (simple-array float-type) dest))
   (dotimes (i (dim0 matrix))
     (dotimes (j (dim1 matrix))
       (setf (aref dest j i) (aref matrix i j)))))
@@ -62,4 +62,4 @@
 		nil "Improper destination matrix dimensions")
 	(setf dest (the simple-array (make-matrix (list dim1 dim0) :element-type element-type))))
     (float-choice-funcall element-type transpose nil
-			  matrix dest)))
+			  matrix dest)))|#

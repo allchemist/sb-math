@@ -34,7 +34,7 @@
   (dotimes (i (the fixnum (array-total-size m1)))
     (setf (the float-type (row-major-aref m1 i))
 	  (the float-type (funcall func (the float-type (row-major-aref m1 i))
-				        (the float-type (row-major-aref m2 i))
+				   (the float-type (row-major-aref m2 i))
 					(the float-type (row-major-aref m3 i)))))))
 
 (defun map-three-matrices (m1 m2 m3 func)

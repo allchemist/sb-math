@@ -19,7 +19,7 @@
 		    (t (error "Path not found ~A" path))))
 	  pathnames))
      *libs*))
-  
+
 (defun load-foreign-library (name)
   (map nil #'load-shared-object (second (assoc name *libs*))))
 
@@ -54,4 +54,7 @@
 #+x86-64 (define-foreign-library :lapack "lib/liblapack64.so")
 
 #+x86 (define-foreign-library :pppack "lib/libpppack.so")
+#+x86-64 "Sorry, 64-bit pppack currently not supported"
+
+#+x86 (define-foreign-library :lapacke "lib/liblapacke.so")
 #+x86-64 "Sorry, 64-bit pppack currently not supported"

@@ -43,13 +43,20 @@
 	     (:file "aliens")
 	     (:file "lowlevel")
 	     (:file "highlevel")))
-   (:module lapack
+#|   (:module lapack
 	    :serial t
 	    :components
 	    ((:file "module")
 	     (:file "wrappers")
 	     (:file "aliens")
 	     (:file "lowlevel")
+	     (:file "highlevel")))|#
+   (:module lapacke
+	    :serial t
+	    :components
+	    ((:file "module")
+	     (:file "wrappers")
+	     (:file "aliens")
 	     (:file "highlevel")))
    (:module applications
 	    :serial t
@@ -61,6 +68,6 @@
 	    :depends-on (base lib blas lapack)
 	    :components
 	    ((:file "deftest")))))
-	     
+
 |#
 
