@@ -36,11 +36,13 @@
 
 ;; basis rotation
 
-(defun orthogonal-basis-transform (basis rotation)
-  (gemm (gemm rotation basis) rotation :transb :trans))
+(defun orthogonal-basis-transform (basis rotation &key pure)
+  (gemm (gemm rotation basis :dest (unless pure basis))
+	rotation :transb :trans :dest (unless pure basis)))
 
-(defun general-basis-transform (basis rotation)
-  (gemm (gemm rotation basis) (lu-inverse rotation)))
+(defun general-basis-transform (basis rotation &key pure)
+  (gemm (gemm rotation basis :dest (unless pure basis))
+	(inv rotation :pure pure) :dest (unless pure basis)))
 
 ;; chain matrix multiplication
 
@@ -48,9 +50,9 @@
   (ecase (length matrices)
     (0 nil)
     (1 (first matrices))
-    (2 (gemm matrices))
-    (3 (cmm3 matrices))
-    (4 (cmm4 matrices))))
+    (2 (apply #'gemm matrices))
+    (3 (apply #'cmm3 matrices))
+    (4 (apply #'cmm4 matrices))))
 
 (defun cmm3 (m1 m2 m3)
   (if (< (+ (* (dim0 m1) (dim1 m1) (dim1 m2))
@@ -65,7 +67,7 @@
 	(r2 (dim0 m2)) (c2 (dim1 m2))
 	(r3 (dim0 m1)) (c3 (dim1 m1))
 	(r4 (dim0 m2)) (c4 (dim1 m2))
-	(vals (make-list 6)))
+	(vals (make-list 5)))
     (setf (elt vals 0) (+ (* r3 r4 c4) (* r2 r3 c4) (* r1 r2 c4)))
     (setf (elt vals 1) (+ (* r2 r3 c3) (* r2 r4 c4) (* r1 r2 c4)))
     (setf (elt vals 2) (+ (* r2 r3 c3) (* r1 r2 c3) (* r1 r4 c4)))

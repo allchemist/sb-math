@@ -185,7 +185,7 @@
 (defun cger (A X Y alpha conj)
   (declare (type (simple-array (complex single-float)) A X Y)
 	   (optimize speed (safety 0) (space 0))
-	   (type single-float alpha))
+	   (type (complex single-float) alpha))
   (let ((m (dim0 X)) (n (dim0 Y)))
     (declare (type fixnum m n))
     (ecase conj
@@ -198,7 +198,7 @@
 (defun zger (A X Y alpha conj)
   (declare (type (simple-array (complex double-float)) A X Y)
 	   (optimize speed (safety 0) (space 0))
-	   (type double-float alpha))
+	   (type (complex double-float) alpha))
   (let ((m (dim0 X)) (n (dim0 Y)))
     (declare (type fixnum m n))
     (ecase conj

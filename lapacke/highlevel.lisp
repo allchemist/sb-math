@@ -1,6 +1,6 @@
 (in-package :sb-math)
 
-(export '(transpose lu inv solve svd))
+(export '(transpose lu inv lin-solve svd))
 
 (defun transpose (matrix &optional dest)
   (let ((element-type (array-element-type matrix))
@@ -54,7 +54,7 @@
 	    (assert (zerop info) nil "LU inversion returned non-zero code: ~A" info))))
     %A))
 
-(defun solve (A B &key (trans :notrans) (pure t))
+(defun lin-solve (A B &key (trans :notrans) (pure t))
   (let* ((dim (dim0 A))
 	 (dim1 (if (vectorp B) 1 (dim1 B)))
 	 (element-type (array-element-type A))

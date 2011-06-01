@@ -36,7 +36,7 @@
   (dotimes (i dim)
     (setf (aref matrix i i) (aref source i))))
 
-(define-with-types sub-matrix (:matrix-args (matrix dest) :rest-args (dimensions offset))
+(define-with-types sub-matrix (:matrix-args (matrix dest) :rest-args (dimensions offset) :return (the (simple-array float-type) dest))
   (let ((row-offset (first offset))
 	(col-offset (second offset))
 	(sub-dim0 (first dimensions))
@@ -111,8 +111,10 @@
 (defun sub-matrix (matrix dimensions offset &optional dest)
   (declare (optimize speed)
 	   (type simple-array matrix))
-  (float-choice-funcall (array-element-type matrix) sub-matrix nil
-			matrix dest dimensions offset))
+  (let ((element-type (array-element-type matrix)))
+    (when (not dest) (setf dest (the simple-array (make-matrix dimensions :element-type element-type))))
+    (float-choice-funcall element-type sub-matrix nil
+			  matrix dest dimensions offset)))
 
 (defun (setf sub-matrix) (source matrix dimensions offset)
   (declare (optimize speed)

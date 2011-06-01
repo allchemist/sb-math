@@ -36,7 +36,7 @@
     (ecase element-type
       (single-float (simin matrix))
       (double-float (dimin matrix)))))
-			  
+
 (defun imax (matrix)
   (declare (type simple-array matrix)
 	   (optimize speed))

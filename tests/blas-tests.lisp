@@ -7,7 +7,7 @@
 
 (let ((v1 (make-random-matrix 5))
       (v2 (make-random-matrix 5)))
-  
+
   (define-test "dot-single"
     (inner-prod v1 v2)
     (reduce #'+ (map 'vector #'* v1 v2))
@@ -22,7 +22,7 @@
     (ammax v1)
     (apply #'max (coerce v1 'list))
     :eps *eps-single*)
-  
+
   (define-test "copy-with-offset-single"
     (let ((dest (make-matrix 7)))
       (copy-with-offset v1 dest 1)
@@ -41,13 +41,14 @@
 (let ((m1 (make-matrix '(3 5)))
       (v1 (make-matrix 5))
       (v2 (make-matrix 3)))
-  (do-matrix (m1 i j)
-    (setf (aref m1 i j) (exp (/ (+ (- i j) 0.5)))))
-  (do-matrix (v1 i)
+  (dotimes (i (dim0 m1))
+    (dotimes (j (dim1 m1))
+      (setf (aref m1 i j) (exp (/ (+ (- i j) 0.5))))))
+  (dotimes (i (dim0 v1))
     (setf (aref v1 i) (exp (/ i (dim0 v1)))))
-  (do-matrix (v2 i)
+  (dotimes (i (dim0 v2))
     (setf (aref v2 i) (/ (- (exp i) 0.5))))
-  
+
   (define-test "gemv-single"
     (gemv m1 v1)
     (make-array (dim0 m1) :element-type 'single-float
@@ -74,32 +75,26 @@
 
 (let ((m (make-matrix '(5 5)))
       (v (make-random-matrix 5)))
-  (do-upper-triangle (m i j)
-    (setf (aref m i j) (random 1.0)))
-  (do-matrix (v i)
+  (dotimes (i 5)
+    (dotimes (j 5)
+      (when (>= j i) (setf (aref m i j) (random 1.0)))))
+  (dotimes (i 5)
     (setf (aref v i) (random 1.0)))
   (define-test "trmv-single" (gemv m v) (trmv m v) :eps *eps-single*)
-  (mirror-upper-triangle m)
+  (dotimes (i 5)
+    (dotimes (j 5)
+      (when (>= j i) (setf (aref m i j) (setf (aref m i j) (random 1.0))))))
   (define-test "symv-single" (gemv m v) (symv m v) :eps *eps-single*)
 )
 
-
-(let ((pm (make-random-pmatrix '(5 5) :pack-type :triangular))
-      (v (make-random-matrix 5)))
-  (define-test "tpmv-single" (gemv (unpack-pmatrix pm) v) (tpmv pm v) :eps *eps-single*))
-
-(let ((pm (make-random-pmatrix '(5 5) :pack-type :symmetric))
-      (v (make-random-matrix 5)))
-  (define-test "spmv-single" (gemv (unpack-pmatrix pm) v) (spmv pm v) :eps *eps-single*))
-
-
 ;; BLAS 3
 
-(let ((m1 (make-matrix '(3 5) :element-type 'double-float))
+(let ((m1 (make-matrix '(3 5)))
       (m3x3 nil))
-  (do-matrix (m1 i j)
-    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) 0.5))) 'double-float)))
-  
+  (dotimes (i 3)
+    (dotimes (j 5)
+      (setf (aref m1 i j) (exp (/ (+ (- i j) 0.5))))))
+
   (setf m3x3 #m((55.894108 16.309284 15.556982)
 	       (16.309284 59.12306 18.711231)
 	       (15.556982 18.711231 60.89927)))
@@ -137,7 +132,7 @@
 
 (let ((v1 (make-random-matrix 5 :element-type 'double-float))
       (v2 (make-random-matrix 5 :element-type 'double-float)))
-  
+
   (define-test "dot-double"
     (inner-prod v1 v2)
     (reduce #'+ (map 'vector #'* v1 v2))
@@ -152,7 +147,7 @@
     (ammax v1)
     (apply #'max (coerce v1 'list))
     :eps *eps-double*)
-  
+
   (define-test "copy-with-offset-double"
     (let ((dest (make-matrix 7 :element-type 'double-float)))
       (copy-with-offset v1 dest 1)
@@ -177,7 +172,7 @@
     (setf (aref v1 i) (coerce (exp (/ i (dim0 v1))) 'double-float)))
   (do-matrix (v2 i)
     (setf (aref v2 i) (coerce (/ (- (exp i) 0.5)) 'double-float)))
-  
+
   (define-test "gemv-double"
     (gemv m1 v1)
     (make-array (dim0 m1) :element-type 'double-float
@@ -207,24 +202,13 @@
 
 (let ((m (make-matrix '(5 5) :element-type 'double-float))
       (v (make-random-matrix 5 :element-type 'double-float)))
-  (do-upper-triangle (m i j)
-    (setf (aref m i j) (random 1d0)))
-  (do-matrix (v i)
-    (setf (aref v i) (random 1d0)))
+  (do-matrix (m i j)
+    (when (>= j i) (setf (aref m i j) (random 1d0))))
   (define-test "trmv-double" (gemv m v) (trmv m v) :eps *eps-double*)
-  (mirror-upper-triangle m)
+  (do-matrix (m i j)
+    (when (>= j i) (setf (aref m i j) (setf (aref m j i) (random 1d0)))))
   (define-test "symv-double" (gemv m v) (symv m v) :eps *eps-double*)
 )
-
-
-(let ((pm (make-random-pmatrix '(5 5) :element-type 'double-float :pack-type :triangular))
-      (v (make-random-matrix 5 :element-type 'double-float)))
-  (define-test "tpmv-double" (gemv (unpack-pmatrix pm) v) (tpmv pm v) :eps *eps-double*))
-
-(let ((pm (make-random-pmatrix '(5 5) :element-type 'double-float :pack-type :symmetric))
-      (v (make-random-matrix 5 :element-type 'double-float)))
-  (define-test "spmv-double" (gemv (unpack-pmatrix pm) v) (spmv pm v) :eps *eps-double*))
-
 
 ;; BLAS 3
 
@@ -232,7 +216,7 @@
       (m3x3 nil))
   (do-matrix (m1 i j)
     (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) 0.5))) 'double-float)))
-  
+
   (setf m3x3 #m((55.89410989627369d0 16.30928362692707d0 15.556980673559046d0)
 		(16.30928362692707d0 59.123059668949104d0 18.711231080120108d0)
 		(15.556980673559046d0 18.711231080120108d0 60.899271633324354d0)))
@@ -275,7 +259,7 @@
 
 (let ((v1 (make-random-matrix 5 :element-type '(complex single-float)))
       (v2 (make-random-matrix 5 :element-type '(complex single-float))))
-  
+
   (define-test "dot-complex-single"
     (inner-prod v1 v2)
     (reduce #'+ (map 'vector #'* v1 v2))
@@ -290,7 +274,7 @@
 ;    (abs (aref v1 (amax v1)))
 ;    (apply #'max (map 'list #'abs v1))
 ;    :eps *eps-single*)
-  
+
   (define-test "copy-with-offset-complex-single"
     (let ((dest (make-matrix 7 :element-type '(complex single-float))))
       (copy-with-offset v1 dest 1)
@@ -310,22 +294,20 @@
 (let ((m1 (make-matrix '(3 5) :element-type '(complex single-float)))
       (v1 (make-matrix 5 :element-type '(complex single-float)))
       (v2 (make-matrix 3 :element-type '(complex single-float))))
-  (do-matrix (m1 i j)
-    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex single-float))))
-  (do-matrix (v1 i)
+  (dotimes (i 3) (dotimes (j 5)
+    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex single-float)))))
+  (dotimes (i 5)
     (setf (aref v1 i) (coerce (exp (complex (/ i (dim0 v1))
 					    (dim0 v1)))
 			      '(complex single-float))))
-  (do-matrix (v2 i)
+  (dotimes (i 3)
     (setf (aref v2 i) (coerce (complex (/ (- (exp i) 0.5)) (exp i)) '(complex single-float))))
-  
+
   (define-test "gemv-complex-single"
     (gemv m1 v1)
-    (make-array (dim0 m1) :element-type '(complex single-float)
-		:initial-contents
-		(list #C(-1.3272094 -6.056485) #C(-1.9651418 -7.220763) #C(-2.4799757 -8.446573)))
+    #10m(#C(-1.3272094 -6.056485) #C(-1.9651418 -7.220763) #C(-2.4799757 -8.446573))
     :eps *eps-single*)
-  
+
    (define-test "gemv-trans-complex-single"
     (gemv m1 v2 :transA :trans)
     (make-array (dim1 m1) :element-type '(complex single-float)
@@ -336,43 +318,30 @@
 
   (define-test "ger-complex-single"
     (ger v1 v2)
-    (make-array '(5 3) :element-type '(complex single-float)
-		:initial-contents
-		'((#C(1.5262487 -1.6341864) #C(2.7345011 0.3387913) #C(7.1267214 1.9568006))
-		  (#C(1.8641644 -1.9959998) #C(3.3399274 0.41380063) #C(8.704597 2.3900416))
-		  (#C(2.2768955 -2.4379196) #C(4.0793967 0.5054173) #C(10.631819 2.9192035))
-		  (#C(2.7810063 -2.9776816) #C(4.982586 0.617318) #C(12.985732 3.5655231))
-		  (#C(3.396729 -3.6369486) #C(6.085744 0.75399387) #C(15.860809 4.35494))))
+    #10m((#C(1.5262487 -1.6341864) #C(2.7345011 0.3387913) #C(7.1267214 1.9568006))
+	 (#C(1.8641644 -1.9959998) #C(3.3399274 0.41380063) #C(8.704597 2.3900416))
+	 (#C(2.2768955 -2.4379196) #C(4.0793967 0.5054173) #C(10.631819 2.9192035))
+	 (#C(2.7810063 -2.9776816) #C(4.982586 0.617318) #C(12.985732 3.5655231))
+	 (#C(3.396729 -3.6369486) #C(6.085744 0.75399387) #C(15.860809 4.35494)))
     :eps *eps-single*)
 )
 
 (let ((m (make-matrix '(5 5) :element-type '(complex single-float)))
       (v (make-random-matrix 5 :element-type '(complex single-float))))
-  (do-upper-triangle (m i j)
-    (setf (aref m i j) (complex (random 1.0) (random 1.0))))
-  (do-matrix (v i)
+  (dotimes (i 5) (dotimes (j 5)
+    (when (>= j i) (setf (aref m i j) (complex (random 1.0) (random 1.0))))))
+  (dotimes (i 5)
     (setf (aref v i) (complex (random 1.0) (random 1.0))))
   (define-test "trmv-complex-single" (gemv m v) (trmv m v) :eps *eps-single*)
-  (mirror-lower-hermitian-triangle m)
-  (do-diag (m i) (setf (aref m i i) (complex (realpart (aref m i i)))))
-  (define-test "hemv-complex-single" (gemv m v) (hemv m v) :eps *eps-single*)
 )
-
-(let ((pm (make-random-pmatrix '(5 5) :element-type '(complex single-float) :pack-type :triangular))
-      (v (make-random-matrix 5 :element-type '(complex single-float))))
-  (define-test "tpmv-complex-single" (gemv (unpack-pmatrix pm) v) (tpmv pm v) :eps *eps-single*))
-
-(let ((pm (make-random-pmatrix '(5 5) :element-type '(complex single-float) :pack-type :hermitian))
-      (v (make-random-matrix 5 :element-type '(complex single-float))))
-  (define-test "hpmv-complex-single" (gemv (unpack-pmatrix pm) v) (hpmv pm v) :eps *eps-single*))
 
 ;; BLAS 3
 
 (let ((m1 (make-matrix '(3 5) :element-type '(complex single-float)))
       (m3x3 nil))
-  (do-matrix (m1 i j)
-    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex single-float))))
-  
+  (dotimes (i 3) (dotimes (j 5)
+    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex single-float)))))
+
   (setf m3x3 #10m((#C(-1.8265547 -7.075855) #C(2.32209 -5.8760457) #C(3.198052 -5.8503995))
 		  (#C(2.32209 -5.8760457) #C(0.66209346 -8.323121) #C(4.3859315 -6.5478544))
 		  (#C(3.198052 -5.8503995) #C(4.3859315 -6.5478544) #C(2.336813 -8.582822))))
@@ -419,7 +388,7 @@
 
 (let ((v1 (make-random-matrix 5 :element-type '(complex double-float)))
       (v2 (make-random-matrix 5 :element-type '(complex double-float))))
-  
+
   (define-test "dot-complex-double"
     (inner-prod v1 v2)
     (reduce #'+ (map 'vector #'* v1 v2))
@@ -434,7 +403,7 @@
 ;    (abs (aref v1 (amax v1)))
 ;    (apply #'max (map 'list #'abs v1))
 ;    :eps *eps-double*)
-  
+
   (define-test "copy-with-offset-complex-double"
     (let ((dest (make-matrix 7 :element-type '(complex double-float))))
       (copy-with-offset v1 dest 1)
@@ -453,15 +422,15 @@
 (let ((m1 (make-matrix '(3 5) :element-type '(complex double-float)))
       (v1 (make-matrix 5 :element-type '(complex double-float)))
       (v2 (make-matrix 3 :element-type '(complex double-float))))
-  (do-matrix (m1 i j)
-    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex double-float))))
-  (do-matrix (v1 i)
+  (dotimes (i 3) (dotimes (j 5)
+    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex double-float)))))
+  (dotimes (i 5)
     (setf (aref v1 i) (coerce (exp (complex (/ i (dim0 v1))
 					    (dim0 v1)))
 			      '(complex double-float))))
-  (do-matrix (v2 i)
+  (dotimes (i 3)
     (setf (aref v2 i) (coerce (complex (/ (- (exp i) 0.5)) (exp i)) '(complex double-float))))
-  
+
   (define-test "gemv-complex-double"
     (gemv m1 v1)
     (make-array (dim0 m1) :element-type '(complex double-float)
@@ -470,7 +439,7 @@
 		  #C(-1.9651417261616424d0 -7.220763349064781d0)
 		  #C(-2.4799757035207293d0 -8.446573547342686d0)))
     :eps *eps-double*)
-  
+
    (define-test "gemv-trans-complex-double"
     (gemv m1 v2 :transA :trans)
     (make-array (dim1 m1) :element-type '(complex double-float)
@@ -506,30 +475,19 @@
 
 (let ((m (make-matrix '(5 5) :element-type '(complex double-float)))
       (v (make-random-matrix 5 :element-type '(complex double-float))))
-  (do-upper-triangle (m i j)
-    (setf (aref m i j) (complex (random 1d0) (random 1d0))))
-  (do-matrix (v i)
+  (dotimes (i 5) (dotimes (j 5)
+    (when (>= j i) (setf (aref m i j) (complex (random 1d0) (random 1d0))))))
+  (dotimes (i 5)
     (setf (aref v i) (complex (random 1d0) (random 1d0))))
   (define-test "trmv-complex-double" (gemv m v) (trmv m v) :eps *eps-double*)
-  (mirror-upper-hermitian-triangle m)
-  (do-diag (m i) (setf (aref m i i) (complex (realpart (aref m i i)))))
-  (define-test "hemv-complex-double" (gemv m v) (hemv m v) :eps *eps-double*)
 )
-
-(let ((pm (make-random-pmatrix '(5 5) :element-type '(complex double-float) :pack-type :triangular))
-      (v (make-random-matrix 5 :element-type '(complex double-float))))
-  (define-test "tpmv-complex-double" (gemv (unpack-pmatrix pm) v) (tpmv pm v) :eps *eps-double*))
-
-(let ((pm (make-random-pmatrix '(5 5) :element-type '(complex double-float) :pack-type :hermitian))
-      (v (make-random-matrix 5 :element-type '(complex double-float))))
-  (define-test "hpmv-complex-double" (gemv (unpack-pmatrix pm) v) (hpmv pm v) :eps *eps-double*))
 
 ;; BLAS 3
 
 (let ((m1 (make-matrix '(3 5) :element-type '(complex double-float)))
       (m3x3 nil))
-  (do-matrix (m1 i j)
-    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex double-float))))
+  (dotimes (i 3) (dotimes (j 5)
+    (setf (aref m1 i j) (coerce (exp (/ (+ (- i j) #C(0.5 0.5)))) '(complex double-float)))))
 
   (setf m3x3 #11m((#C(-1.8265545278069952d0 -7.075854306338542d0)
 		     #C(2.322090008480045d0 -5.876045534645553d0)
@@ -540,10 +498,10 @@
 		  (#C(3.1980518934822717d0 -5.85039943071468d0)
 		     #C(4.385931439664744d0 -6.547853836641243d0)
 		     #C(2.336813334617367d0 -8.582822085210687d0))))
-  
+
   (define-test "gemm-complex-double"
     (gemm m1 (transpose m1)) m3x3 :eps *eps-double*)
-  
+
   (define-test "gemm-transa-complex-double"
     (gemm m1 m1 :transa :trans)
     #11m((#C(2.1157143753012084d0 -8.342471489069144d0)

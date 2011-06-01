@@ -9,80 +9,88 @@
 			      :element-type 'double-float))
       (cm (make-random-matrix (double-list (round (plain-rng 5 10)))
 			      :element-type '(complex single-float)))
-      (zm (make-random-matrix (double-list (round (plain-rng 5 10)))
+     (zm (make-random-matrix (double-list (round (plain-rng 5 10)))
 			      :element-type '(complex double-float))))
 ;; lu-invese
-  (define-test "lu-inverse-single"
-      (gemm (lu-inverse sm) sm)
-    (diag (make-matrix (dim0 sm)
+  (define-test "inv-single"
+      (gemm (inv sm) sm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type 'single-float))
+	  (make-matrix (dim0 sm)
 		       :element-type 'single-float
 		       :initial-element 1.0))
     :eps *eps-single*)
 
-  (define-test "lu-inverse-double"
-      (gemm (lu-inverse dm) dm)
-    (diag (make-matrix (dim0 dm)
+  (define-test "inv-double"
+      (gemm (inv dm) dm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type 'double-float))
+	  (make-matrix (dim0 dm)
 		       :element-type 'double-float
 		       :initial-element 1d0))
     :eps *eps-double*)
 
-  (define-test "lu-inverse-complex-single"
-      (gemm (lu-inverse cm) cm)
-    (diag (make-matrix (dim0 cm)
+  (define-test "inv-complex-single"
+      (gemm (inv cm) cm)
+    (setf (diag (make-matrix `(,(dim1 sm) ,(dim1 sm)) :element-type '(complex single-float)))
+	  (make-matrix (dim0 cm)
 		       :element-type '(complex single-float)
 		       :initial-element (complex 1.0)))
     :eps *eps-single*)
 
-  (define-test "lu-inverse-complex-double"
-      (gemm (lu-inverse zm) zm)
-    (diag (make-matrix (dim0 zm)
+  (define-test "inv-complex-double"
+      (gemm (inv zm) zm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type '(complex double-float)))
+	  (make-matrix (dim0 zm)
 		       :element-type '(complex double-float)
 		       :initial-element (complex 1d0)))
     :eps *eps-double*)
 
 ;; lu-solve
-  (define-test "lu-solve-single"
-      (gemv sm (lu-solve sm (col sm 0))) (col sm 0) :eps *eps-single*)
+  (define-test "lin-solve-single"
+      (gemv sm (lin-solve sm (col sm 0))) (col sm 0) :eps *eps-single*)
 
-  (define-test "lu-solve-double"
-      (gemv dm (lu-solve dm (col dm 0))) (col dm 0) :eps *eps-double*)
+  (define-test "lin-solve-double"
+      (gemv dm (lin-solve dm (col dm 0))) (col dm 0) :eps *eps-double*)
 
-  (define-test "lu-solve-complex-single"
-      (gemv cm (lu-solve cm (col cm 0))) (col cm 0) :eps *eps-single*)
+  (define-test "lin-solve-complex-single"
+      (gemv cm (lin-solve cm (col cm 0))) (col cm 0) :eps *eps-single*)
 
-  (define-test "lu-solve-complex-double"
-      (gemv zm (lu-solve zm (col zm 0))) (col zm 0) :eps *eps-double*)
+  (define-test "lin-solve-complex-double"
+      (gemv zm (lin-solve zm (col zm 0))) (col zm 0) :eps *eps-double*)
 
-  (define-test "lu-solve-couple-single"
-      (lu-solve sm sm)
-    (diag (make-matrix (dim0 sm)
+  (define-test "lin-solve-couple-single"
+      (lin-solve sm sm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type 'single-float))
+	  (make-matrix (dim0 sm)
 		       :element-type 'single-float
 		       :initial-element 1.0))
     :eps *eps-single*)
-  
-  (define-test "lu-solve-couple-double"
-      (lu-solve dm dm)
-    (diag (make-matrix (dim0 dm)
+
+  (define-test "lin-solve-couple-double"
+      (lin-solve dm dm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type 'double-float))
+	  (make-matrix (dim0 dm)
 		       :element-type 'double-float
 		       :initial-element 1d0))
     :eps *eps-double*)
 
-  (define-test "lu-solve-couple-complex-single"
-      (lu-solve cm cm)
-    (diag (make-matrix (dim0 cm)
+  (define-test "lin-solve-couple-complex-single"
+      (lin-solve cm cm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type '(complex single-float)))
+	  (make-matrix (dim0 cm)
 		       :element-type '(complex single-float)
 		       :initial-element (complex 1.0)))
     :eps *eps-single*)
 
-  (define-test "lu-solve-couple-complex-double"
-      (lu-solve zm zm)
-    (diag (make-matrix (dim0 zm)
+  (define-test "lin-solve-couple-complex-double"
+      (lin-solve zm zm)
+    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type '(complex double-float)))
+	  (make-matrix (dim0 zm)
 		       :element-type '(complex double-float)
 		       :initial-element (complex 1d0)))
     :eps *eps-double*)
-
+#|
 ;; eigen
-  
+
   (defun check-cond (matrix)
     (let ((vals (eigen matrix :right :none))
 	  (res t))
@@ -122,7 +130,7 @@
 	(gemm (gemm vecs vals) (lu-inverse vecs)))
     zm
     :eps *eps-double*)
-
+|#
 ;; svd
 
   (define-test "svd-prod-single"
@@ -131,7 +139,7 @@
 	(gemm (gemm U S) VT))
     sm
     :eps *eps-single*)
-  
+
   (define-test "svd-prod-double"
       (multiple-value-bind (S U VT)
 	  (svd dm :left :all :right :all :values :matrix)
@@ -145,7 +153,7 @@
 	(gemm (gemm U S) VT))
     cm
     :eps *eps-single*)
-  
+
   (define-test "svd-prod-complex-double"
       (multiple-value-bind (S U VT)
 	  (svd zm :left :all :right :all :values :matrix)
@@ -185,6 +193,6 @@
       (gemm VT VT :transa :conjtrans)
       :eps *eps-double*))
 
-  
+
 
 )

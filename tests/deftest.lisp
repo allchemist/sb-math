@@ -33,12 +33,12 @@
 	  (print-matrix compare
 			:prec (float-type-choice (array-element-type compare) 7 16 7 16)
 			:dest *query-io*)
-	  (format *query-io* "~% is more than epsilon: ~A~%" eps)))))	  
+	  (format *query-io* "~% is more than epsilon: ~A~%" eps)))))
 
 (defun run-tests (&rest tests)
   (flet ((test-file (test)
 	   (let ((file (concatenate 'string
-				    *path-to-tests* 
+				    *path-to-tests*
 				    (string-downcase (string test))
 				    "-tests.lisp")))
 	     (if (probe-file file) file (error "File ~A not found" file)))))
@@ -50,5 +50,5 @@
     (format *query-io* "; These units asserted: ~A~%" (or *asserted* "none"))))
 
 #|(defun run-all-tests ()
-  (run-tests :base :blas :lapack))
+  (run-tests :base :blas :lapacke))
 |#

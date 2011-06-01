@@ -7,11 +7,11 @@
 	 ((equal ,type '(complex double-float)) ,complex-double)))
 
 (defmacro float-choice-funcall (type func prefix &rest args)
-  `(float-type-choice ,type
-    (,(intern (string-upcase (concat-as-strings prefix 's func))) ,@args)
-    (,(intern (string-upcase (concat-as-strings prefix 'd func))) ,@args)
-    (,(intern (string-upcase (concat-as-strings prefix 'c func))) ,@args)
-    (,(intern (string-upcase (concat-as-strings prefix 'z func))) ,@args)))
+`(float-type-choice ,type
+   (,(intern (string-upcase (concat-as-strings prefix 's func))) ,@args)
+   (,(intern (string-upcase (concat-as-strings prefix 'd func))) ,@args)
+   (,(intern (string-upcase (concat-as-strings prefix 'c func))) ,@args)
+   (,(intern (string-upcase (concat-as-strings prefix 'z func))) ,@args)))
 
 (defun parse-type-defs (code type)
   (let ((str (write-to-string code)))

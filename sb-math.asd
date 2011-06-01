@@ -63,11 +63,8 @@
 	    :components
 	    ((:file "module")
 	     (:file "matrix-product")
-	     (:file "svd")))))
-#|   (:module tests
+	     (:file "svd")))
+   (:module tests
 	    :depends-on (base lib blas lapack)
 	    :components
 	    ((:file "deftest")))))
-
-|#
-
