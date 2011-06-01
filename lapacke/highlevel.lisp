@@ -1,6 +1,6 @@
 (in-package :sb-math)
 
-(export '(transpose lu lu-inverse lu-solve svd))
+(export '(transpose lu inv solve svd))
 
 (defun transpose (matrix &optional dest)
   (let ((element-type (array-element-type matrix))
@@ -32,7 +32,7 @@
       (assert (zerop info) nil "LU decomposition returned non-zero code: ~A" info)
       (values %A ipiv))))
 
-(defun lu-inverse (A &key ipiv (pure t))
+(defun inv (A &key ipiv (pure t))
   (let ((dim (dim0 A))
 	(element-type (array-element-type A))
 	(info -1)
@@ -54,7 +54,7 @@
 	    (assert (zerop info) nil "LU inversion returned non-zero code: ~A" info))))
     %A))
 
-(defun lu-solve (A B &key (trans :notrans) (pure t))
+(defun solve (A B &key (trans :notrans) (pure t))
   (let* ((dim (dim0 A))
 	 (dim1 (if (vectorp B) 1 (dim1 B)))
 	 (element-type (array-element-type A))

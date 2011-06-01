@@ -1,9 +1,11 @@
 (in-package :sb-math)
 
-(defun pseudo-inverse (A)
+(export '(pinv em-norm fm-norm cond-number llsq))
+
+(defun pinv (A)
   (multiple-value-bind (S U VT)
       (svd A :left :all :right :all)
-    (gemm 
+    (gemm
      (gemm VT (setf (diag (make-matrix-like A)) (map-matrix-/ S)) :transa :trans :transb :trans)
      U :transb :trans)))
 
@@ -20,5 +22,5 @@
 	(error "Matrix is unconditioned: last singular value is zero")
 	(/ (aref S 0) last-sv))))
 
-(defun linear-least-squares (A Y)
+(defun llsq (A Y)
   (gemv (pseudo-inverse A) Y))
