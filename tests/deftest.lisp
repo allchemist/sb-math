@@ -49,6 +49,6 @@
     (format *query-io* "; ~A units asserted~%" (length *asserted*))
     (format *query-io* "; These units asserted: ~A~%" (or *asserted* "none"))))
 
-#|(defun run-all-tests ()
-  (run-tests :base :blas :lapacke))
-|#
+(defun run-all-tests ()
+  (run-tests :blas :lapack))
+

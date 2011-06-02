@@ -101,7 +101,9 @@
       (let ((diag
 	     (ecase values
 	       (:vector %s)
-	       (:matrix (setf (diag (make-matrix (array-dimensions %A) :element-type type)) %s)))))
+	       (:real-matrix (setf (diag (make-matrix (array-dimensions %A) :element-type real-type)) %s))
+	       (:matrix (setf (diag (make-matrix (array-dimensions %A) :element-type type))
+			      (if (eq type real-type) %s (coerce-matrix %s type)))))))
 	(values diag
 		(if (eq left :none) nil %u)
 		(if (eq right :none) nil %vt))))))

@@ -29,19 +29,15 @@
     :eps *eps-double*)
 
   (define-test "inv-complex-single"
-      (gemm (inv cm) cm)
-    (setf (diag (make-matrix `(,(dim1 sm) ,(dim1 sm)) :element-type '(complex single-float)))
-	  (make-matrix (dim0 cm)
-		       :element-type '(complex single-float)
-		       :initial-element (complex 1.0)))
+    (let ((res (gemm (inv cm) cm)))
+      (make-matrix 1 :element-type '(complex single-float) :initial-element (- (msum (diag res)) (msum res))))
+    (make-matrix 1 :element-type '(complex single-float) :initial-element (coerce (dim0 cm) '(complex single-float)))
     :eps *eps-single*)
 
   (define-test "inv-complex-double"
-      (gemm (inv zm) zm)
-    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type '(complex double-float)))
-	  (make-matrix (dim0 zm)
-		       :element-type '(complex double-float)
-		       :initial-element (complex 1d0)))
+    (let ((res (gemm (inv zm) zm)))
+      (make-matrix 1 :element-type '(complex double-float) :initial-element (- (msum (diag res)) (msum res))))
+    (make-matrix 1 :element-type '(complex double-float) :initial-element (coerce (dim0 zm) '(complex double-float)))
     :eps *eps-double*)
 
 ;; lu-solve
@@ -67,7 +63,7 @@
 
   (define-test "lin-solve-couple-double"
       (lin-solve dm dm)
-    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type 'double-float))
+    (setf (diag (make-matrix `(,(dim0 dm) ,(dim0 dm)) :element-type 'double-float))
 	  (make-matrix (dim0 dm)
 		       :element-type 'double-float
 		       :initial-element 1d0))
@@ -75,7 +71,7 @@
 
   (define-test "lin-solve-couple-complex-single"
       (lin-solve cm cm)
-    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type '(complex single-float)))
+    (setf (diag (make-matrix `(,(dim0 cm) ,(dim0 cm)) :element-type '(complex single-float)))
 	  (make-matrix (dim0 cm)
 		       :element-type '(complex single-float)
 		       :initial-element (complex 1.0)))
@@ -83,7 +79,7 @@
 
   (define-test "lin-solve-couple-complex-double"
       (lin-solve zm zm)
-    (setf (diag (make-matrix `(,(dim0 sm) ,(dim0 sm)) :element-type '(complex double-float)))
+    (setf (diag (make-matrix `(,(dim0 zm) ,(dim0 zm)) :element-type '(complex double-float)))
 	  (make-matrix (dim0 zm)
 		       :element-type '(complex double-float)
 		       :initial-element (complex 1d0)))
