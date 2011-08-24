@@ -20,7 +20,7 @@
 (define-alien-wrapper axpy :matrix-args (X Y) :float-args alpha
   :lets ((size (the fixnum (array-total-size X))))
   :pre ((assert (<= size (the fixnum (array-total-size Y))) nil "Improper dimensions for axpy"))
-  :alien-args (size alpha X 1 Y 1) 
+  :alien-args (size alpha X 1 Y 1)
   :return Y)
 
 (define-alien-wrapper scal :matrix-args X :float-args alpha

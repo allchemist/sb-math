@@ -31,6 +31,10 @@
 (declaim (ftype (function (fixnum) fixnum) !))
 (defun ! (n) (%! n 1))
 
+(defun binom (n k)
+  (assert (and (>= k 0) (>= n k)) nil "Binomial coeff params should be: 0 <= k <= n")
+  (/ (! n) (! k) (! (- n k))))
+
 ;; simple random generators
 
 (defun simple-rng (x)
@@ -53,7 +57,7 @@
 	  (t (error "element-type is not float")))))
 
 ;; approx equality
-						      
+
 (defgeneric ~= (X Y eps))
 
 (defmethod ~= ((X real) (Y real) eps)

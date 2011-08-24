@@ -2,6 +2,8 @@
 
 (declaim (inline float-sizeof array-sap object-sap complex-sap maybe-complex))
 
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+
 (declaim (ftype (function (t) fixnum) float-sizeof))
 (defun float-sizeof (type)
   (the fixnum
@@ -73,3 +75,5 @@ this gets sap of displaced array, too
 (defmacro function-sap (func type)
   `(alien-sap
     (sb-alien::alien-lambda ,type ((x ,type)) ,(cdr `(,@func x)))))
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))

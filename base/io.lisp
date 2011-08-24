@@ -2,6 +2,8 @@
 
 (export '(store-matrix restore-matrix))
 
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+
 (defun store-matrix (matrix path &optional append)
   (with-open-file (s path
 		     :direction :output
@@ -28,3 +30,5 @@
 	(body path)
 	(with-open-file (s path)
 	  (body s)))))
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))

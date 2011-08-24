@@ -3,7 +3,9 @@
 (export
  '(row-perm random-permutation))
 
-(define-with-types row-perm (:matrix-args (matrix dest) :rest-args perm 
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+
+(define-with-types row-perm (:matrix-args (matrix dest) :rest-args perm
 			     :return (the (simple-array float-type) dest))
   (let ((dest-pos 0) (source-pos 0) (dim0 (dim0 matrix)) (dim1 (dim1 matrix)))
     (declare (type fixnum dest-pos source-pos dim0 dim1)
@@ -63,3 +65,5 @@
 	(setf dest (the simple-array (make-matrix (list dim1 dim0) :element-type element-type))))
     (float-choice-funcall element-type transpose nil
 			  matrix dest)))|#
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))

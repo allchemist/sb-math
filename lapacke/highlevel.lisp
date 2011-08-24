@@ -5,7 +5,7 @@
 (defun transpose (matrix &optional dest)
   (let ((element-type (array-element-type matrix))
 	(dim0 (dim0 matrix))
-	(dim1 (dim1 matrix))
+	(dim1 (if (= (array-rank matrix) 1) 1 (dim1 matrix)))
 	(info -1))
     (if dest
 	(assert (and (= dim0 (dim1 dest))

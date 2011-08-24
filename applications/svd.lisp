@@ -23,4 +23,4 @@
 	(/ (aref S 0) last-sv))))
 
 (defun llsq (A Y)
-  (gemv (pseudo-inverse A) Y))
+  (gemv (pinv A) Y))

@@ -41,7 +41,7 @@
 	     (actual-return (cond ((eq return :body) nil)
 				  ((null return) `(the ,array-type ,(first matrix-args)))
 				  (t return)))
-	     (typed-name (intern (string-upcase (concat-as-strings prefix pre name)) :sb-math)))
+	     (typed-name (intern (string-upcase (concat-as-strings prefix pre name)))))
 	(push
 	 `(declaim (ftype (function (,@(make-list (length matrix-args) :initial-element array-type)
 				     ,@(make-list (length float-args) :initial-element float-type)

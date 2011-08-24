@@ -3,6 +3,8 @@
 (export
  '(col row diag))
 
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+
 (define-with-types col (:matrix-args (matrix dest) :rest-args (idx dim)
 			:return (the (simple-array float-type) dest))
   (declare (type fixnum idx dim))
@@ -141,3 +143,5 @@
     (assert (<= (dim0 source) dim) nil "Destination matrix is too small")
     (float-choice-funcall element-type set-diag nil
       matrix source dim)))
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))

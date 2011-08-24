@@ -1,7 +1,7 @@
 (in-package :sb-math)
 
 (export
- '(map-matrix map-two-matrices map-three-matrices))
+ '(map-matrix map-two-matrices map-three-matrices define-mapping-function))
 
 (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
@@ -43,9 +43,9 @@
 
 ;; mapping with specified functions
 
-(defmacro define-mapping-function (func)
+(defmacro define-mapping-function (func &optional (package (sb-int:sane-package)))
   (let ((defs nil)
-	(name (intern (string-upcase (concat-as-strings 'map-matrix- func)) :sb-math)))
+	(name (intern (string-upcase (concat-as-strings 'map-matrix- func)) package)))
     (push
      `(define-with-types ,name (:matrix-args matrix)
 	(dotimes (i (the fixnum (array-total-size matrix)))
@@ -60,9 +60,9 @@
      defs)
     `(progn ,@(nreverse defs))))
 
-(defmacro define-pair-mapping-function (func)
+(defmacro define-pair-mapping-function (func &optional (package (sb-int:sane-package)))
   (let ((defs nil)
-	(name (intern (string-upcase (concat-as-strings 'map-two-matrices- func)) :sb-math)))
+	(name (intern (string-upcase (concat-as-strings 'map-two-matrices- func)) package)))
     (push
      `(define-with-types ,name (:matrix-args (m1 m2))
 	(dotimes (i (the fixnum (array-total-size m1)))

@@ -3,8 +3,8 @@
 ;;; quaternion q=w+ix+jy+kz is represented as 4-vector: [w x y z]
 ;;; every operation is destructive (if it can be destructive), except q-prod
 
-;;; this code exists, and no more. currently not for real usage
-;;; so, no symbols exported
+(export '(*quaternion-type* make-zero-q make-identity-q make-rotation-q
+	  q+ q- q* q*c q-norm q-magnitude q-prod q-magnitude q-invert q-rotate-vector))
 
 (defparameter *quaternion-type* 'double-float)
 

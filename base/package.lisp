@@ -10,6 +10,8 @@
        (:use :sb-math-system :common-lisp :sb-alien)
      (:nicknames :mth))))
 
+(in-package :sb-math)
+
 (export 'mth-apropos)
 
 (defun mth-apropos (str)

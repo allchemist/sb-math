@@ -2,22 +2,22 @@
 
 (declaim (inline
 	   ;; blas 1
-           %sdsdot %dsdot %sdot 
-           %ddot %cdotu_sub %cdotc_sub 
-           %zdotu_sub %zdotc_sub %snrm2 
-           %sasum %dnrm2 %dasum 
-           %scnrm2 %scasum %dznrm2 
-           %dzasum %isamax %idamax 
-           %icamax %izamax %sswap 
-           %scopy %saxpy %dswap 
-           %dcopy %daxpy %cswap 
-           %ccopy %caxpy %zswap 
-           %zcopy %zaxpy %srotg 
-           %srotmg %srot %srotm 
-           %drotg %drotmg %drot 
-           %drotm %sscal %dscal 
-           %cscal %zscal %csscal 
-           %zdscal %sgemv %dgemv 
+           %sdsdot %dsdot %sdot
+           %ddot %cdotu_sub %cdotc_sub
+           %zdotu_sub %zdotc_sub %snrm2
+           %sasum %dnrm2 %dasum
+           %scnrm2 %scasum %dznrm2
+           %dzasum %isamax %idamax
+           %icamax %izamax %sswap
+           %scopy %saxpy %dswap
+           %dcopy %daxpy %cswap
+           %ccopy %caxpy %zswap
+           %zcopy %zaxpy %srotg
+           %srotmg %srot %srotm
+           %drotg %drotmg %drot
+           %drotm %sscal %dscal
+           %cscal %zscal %csscal
+           %zdscal %sgemv %dgemv
 	   ;; blas 2
 	   %sgemv %dgemv %cgemv %zgemv
 	   %strmv %dtrmv %ctrmv %ztrmv

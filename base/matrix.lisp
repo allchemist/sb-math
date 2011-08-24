@@ -13,7 +13,7 @@
 	   (sb-ext:muffle-conditions sb-ext:compiler-note))
   (the fixnum (array-dimension array 0)))
 
-(defun dim1 (array) 
+(defun dim1 (array)
   (declare (optimize speed)
 	   (sb-ext:muffle-conditions sb-ext:compiler-note))
   (the fixnum (array-dimension array 1)))
@@ -64,7 +64,7 @@
 		      `(progn
 			 ,@body)))))
 	 defs))
-      (push 
+      (push
        `(defmacro do-matrix ((matrix &rest subscripts) &body body)
 	  `(float-choice-funcall (array-element-type ,matrix) do-matrix nil
 				 (,matrix ,@subscripts) ,@body))
@@ -114,8 +114,6 @@
 	(apply #'format dest (make-control-string val prec exp?) (maybe-complex-arglist val)))))
   (terpri dest))
 
-(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))
-
 ;; approximate equality
 
 (defmethod ~= ((X array) (Y array) eps)
@@ -142,3 +140,5 @@
 	  for val from xmin to xmax by (/ (- xmax xmin) (1- points))
 	  do (setf (aref vec idx) (coerce val type)))
     vec))
+
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))
